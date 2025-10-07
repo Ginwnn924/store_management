@@ -55,3 +55,4 @@ _ReSharper*/
 # Others
 *.log
 *.tmp
+StoreManagement/StoreManagement/appsettings.Development.json
