@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:latest
+    container_name: store_management_db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: store_management
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./StoreManagement/db.sql:/docker-entrypoint-initdb.d/db.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - store_network
+
+  cache:
+    image: redis:latest
+    container_name: store_management_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - store_network
+
+  app:
+    build:
+      context: ./StoreManagement/StoreManagement
+      dockerfile: Dockerfile
+    container_name: store_management_app
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Server=db;Port=3306;Database=store_management;User=root;Password=rootpassword;
+      - Redis__ConnectionString=cache:6379
+    ports:
+      - "8080:80"
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
+    networks:
+      - store_network
+
+volumes:
+  mysql_data:
+
+networks:
+  store_network:
+    driver: bridge
