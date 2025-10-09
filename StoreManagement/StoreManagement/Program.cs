@@ -14,6 +14,7 @@ builder.Services.AddControllers();
 
 // Register services
 builder.Services.AddScoped<ISupplierService, SupplierService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
 // Configure MySQL with EF Core
 var connectionString = builder.Configuration.GetConnectionString("MySql");
 builder.Services.AddDbContext<StoreManagementDbContext>(options =>
