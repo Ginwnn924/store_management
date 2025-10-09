@@ -6,6 +6,8 @@ using System.Text;
 using StoreManagement.Data;
 using StoreManagement.Services.Impl;
 using StoreManagement.Services;
+using StoreManagement.Repository.Impl;
+using StoreManagement.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,9 +15,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 
-// Ioc
+// Ioc Service
 builder.Services.AddScoped<IOrderService, OrderService>();
 
+
+// Ioc Repository
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 
 // Configure MySQL with EF Core
 var connectionString = builder.Configuration.GetConnectionString("MySql");
