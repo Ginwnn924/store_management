@@ -4,12 +4,16 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using StoreManagement.Data;
+using StoreManagement.Services;
+using StoreManagement.Services.Impl;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
 
+// Register services
+builder.Services.AddScoped<ISupplierService, SupplierService>();
 // Configure MySQL with EF Core
 var connectionString = builder.Configuration.GetConnectionString("MySql");
 builder.Services.AddDbContext<StoreManagementDbContext>(options =>
