@@ -17,10 +17,12 @@ builder.Services.AddControllers();
 
 // Ioc Service
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IProductService, ProductService>();
 
 
 // Ioc Repository
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
 // Configure MySQL with EF Core
 var connectionString = builder.Configuration.GetConnectionString("MySql");
