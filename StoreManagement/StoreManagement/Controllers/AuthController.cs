@@ -1,44 +1,45 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using StoreManagement.Data;
 using StoreManagement.DTOs;
 using StoreManagement.Models;
+using StoreManagement.Services;
+using StoreManagement.Services.Impl;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace StoreManagement.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/auth")]
 public class AuthController : ControllerBase
 {
     private readonly StoreManagementDbContext _context;
     private readonly IConfiguration _configuration;
-
-    public AuthController(StoreManagementDbContext context, IConfiguration configuration)
+    private readonly IRedisCacheService _redisCacheService;
+    public AuthController(StoreManagementDbContext context, IConfiguration configuration, IRedisCacheService redisCacheService)
     {
         _context = context;
         _configuration = configuration;
+        _redisCacheService = redisCacheService;
     }
 
-    [HttpPost("register")]
+    [HttpPost("register/test")]
     public async Task<ActionResult<AuthResponseDto>> Register(RegisterDto registerDto)
     {
-        // Check if user already exists
         if (await _context.Users.AnyAsync(u => u.Username == registerDto.Username))
         {
             return BadRequest(new { message = "Username already exists" });
         }
 
-        // Validate role
         if (registerDto.Role != "admin" && registerDto.Role != "staff")
         {
             return BadRequest(new { message = "Invalid role. Must be 'admin' or 'staff'" });
         }
 
-        // Hash the password (simple hash for now, in production use proper password hashing)
         var hashedPassword = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
 
         var user = new User
@@ -81,6 +82,9 @@ public class AuthController : ControllerBase
 
         var token = GenerateJwtToken(user);
 
+        string cacheKey = "jwt:" + token ;
+        await _redisCacheService.SetCacheAsync(cacheKey, "active", TimeSpan.FromDays(2));
+
         return Ok(new AuthResponseDto
         {
             Token = token,
@@ -88,7 +92,28 @@ public class AuthController : ControllerBase
             Role = user.Role
         });
     }
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<ActionResult<Object>> Logout()
+    {
 
+        var authHeader = HttpContext.Request.Headers["Authorization"].FirstOrDefault();
+        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+        {
+            return BadRequest(new { message = "Authorization header is missing or invalid" });
+        }
+        var jwtToken = authHeader.Substring("Bearer ".Length);
+
+
+        string cacheKey = "jwt:" + jwtToken;
+        await _redisCacheService.RemoveCacheAsync(cacheKey);
+
+        return Ok(new
+        {
+            message = "Loggout successfully",
+            status = "sucess"  
+        });
+    }
     private string GenerateJwtToken(User user)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
