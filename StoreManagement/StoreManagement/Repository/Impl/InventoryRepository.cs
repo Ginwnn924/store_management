@@ -26,8 +26,18 @@ namespace StoreManagement.Repository.Impl
                                  .Include(i => i.Product)
                                  .FirstOrDefaultAsync(i => i.InventoryId == id);
         }
-
-       
+        public async Task<Inventory> AddAsync(Inventory entity)
+        {
+         _context.Inventories.Add(entity);
+            await _context.SaveChangesAsync();
+            return entity;
+        }
+        public async Task<Inventory> UpdateAsync(Inventory entity)
+        {
+            _context.Inventories.Update(entity);
+            await _context.SaveChangesAsync();
+            return entity;
+        }
 
         public async Task<bool> DeleteAsync(int id)
         {
@@ -40,14 +50,6 @@ namespace StoreManagement.Repository.Impl
             return true;
         }
 
-        public Task<Inventory> AddAsync(Inventory entity)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<Inventory> UpdateAsync(Inventory entity)
-        {
-            throw new NotImplementedException();
-        }
+       
     }
 }

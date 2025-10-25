@@ -23,6 +23,12 @@ namespace StoreManagement.Controllers
             var result = await _inventoryService.GetAllAsync();
             return Ok(result);
         }
+        [HttpPost]
+        public async Task<IActionResult> Create ([FromBody] InventoryRequest request)
+        {
+            var created = await _inventoryService.AddAsync(request);
+            return Ok(created);
+        }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
@@ -33,9 +39,16 @@ namespace StoreManagement.Controllers
 
             return Ok(result);
         }
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] InventoryRequest request)
+        {
+            var updated = await _inventoryService.UpdateAsync(id, request);
+            if (updated == null) return NotFound();
+            return Ok(updated);
+        }
 
-        
-        
+
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {

@@ -27,8 +27,34 @@ namespace StoreManagement.Services.Impl
             var inventory = await _repository.GetByIdAsync(id);
             return inventory?.ToResponse();
         }
+        public async Task<InventoryResponse> AddAsync(InventoryRequest request)
+        {
+            var allInventory = await _repository.GetAllAsync();
+            var existing = allInventory.FirstOrDefault(i => i.ProductId == request.ProductId);
+            if (existing != null)
+            {
+                existing.Quantity += request.Quantity;
+                existing.UpdatedAt = DateTime.UtcNow;
+                var updated = await _repository.UpdateAsync(existing);
+                return updated.ToResponse();
+            }
+            var entity = request.ToEntity();
+            var created = await _repository.AddAsync(entity);
+            return created.ToResponse();
+        }
+        public async Task<InventoryResponse?> UpdateAsync(int id, InventoryRequest request)
+        {
+            var existing = await _repository.GetByIdAsync(id);
+            if (existing == null) return null;
 
-      
+            existing.Quantity = request.Quantity;
+            existing.UpdatedAt = DateTime.UtcNow;
+
+            var updated = await _repository.UpdateAsync(existing);
+            return updated.ToResponse();
+        }
+
+
         public async Task<bool> DeleteAsync(int id)
         {
             return await _repository.DeleteAsync(id);
