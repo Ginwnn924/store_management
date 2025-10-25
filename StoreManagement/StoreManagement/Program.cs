@@ -4,17 +4,32 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using StoreManagement.Data;
-using StoreManagement.Services;
+
 using StoreManagement.Services.Impl;
+using StoreManagement.Services;
+using StoreManagement.Repository.Impl;
+using StoreManagement.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
 
-// Register services
+
+// Ioc Service
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IInventoryService, InventoryService>();
+builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ISupplierService, SupplierService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
+
+// Ioc Repository
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
+
 // Configure MySQL with EF Core
 var connectionString = builder.Configuration.GetConnectionString("MySql");
 builder.Services.AddDbContext<StoreManagementDbContext>(options =>

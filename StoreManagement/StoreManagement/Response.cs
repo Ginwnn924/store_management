@@ -1,3 +1,4 @@
+
 namespace StoreManagement
 {
     public class Response
