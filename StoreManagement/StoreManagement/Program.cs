@@ -2,13 +2,14 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Text;
+using StackExchange.Redis;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
 using StoreManagement.Data;
-
-using StoreManagement.Services.Impl;
-using StoreManagement.Services;
-using StoreManagement.Repository.Impl;
 using StoreManagement.Repository;
+using StoreManagement.Repository.Impl;
+using StoreManagement.Services;
+using StoreManagement.Services.Impl;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,7 +40,18 @@ var connectionString = builder.Configuration.GetConnectionString("MySql");
 builder.Services.AddDbContext<StoreManagementDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
-// Configure JWT Authentication
+// Configure Redis
+var redisConnectionString = builder.Configuration.GetConnectionString("Redis") ?? throw new InvalidOperationException("Redis not configured"); ;
+builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(sp =>
+    StackExchange.Redis.ConnectionMultiplexer.Connect(redisConnectionString)
+);
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = redisConnectionString;
+});
+builder.Services.AddScoped<IRedisCacheService, RedisCacheService>();
+
+// JWT Authentication Configuration
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
 
@@ -59,6 +71,22 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = async context =>
+        {
+            var redisCacheService = context.HttpContext.RequestServices.GetRequiredService<IRedisCacheService>();
+            var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
+            var cacheKey = "jwt:" + token;
+            var tokenExists = await redisCacheService.ExistsAsync(cacheKey);
+            if (!tokenExists)
+            { 
+                context.Fail("Token not found in Redis.");
+            }
+        }
     };
 });
 
