@@ -1,50 +1,64 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
-using StoreManagement.Data;
-using StoreManagement.Models;
+using StoreManagement.DTOs.Request;
+using StoreManagement.Services;
+
+namespace StoreManagement.Controllers;
 
 [ApiController]
-[Route("api/user")]
-public class UserController : ControllerBase
+[Route("api/[controller]")]
+public class UsersController : ControllerBase
 {
-    private readonly StoreManagementDbContext _dbContext;
+    private readonly IUserService _userService;
 
-    public UserController(StoreManagementDbContext dbContext)
+    public UsersController(IUserService userService)
     {
-        _dbContext = dbContext;
+        _userService = userService;
     }
 
-    [HttpGet("me")]
-    [Authorize]
-    public IActionResult GetCurrentUser()
+    [HttpGet]
+    public async Task<IActionResult> GetUsers()
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        if (userIdClaim == null)
-            return Unauthorized();
-
-        var userId = int.Parse(userIdClaim.Value);
-        var user = _dbContext.Users.Find(userId);
-
-        if (user == null)
-            return NotFound();
-
-        // You may want to use a DTO instead of returning the entity directly
-        return Ok(new
-        {
-            user.UserId,
-            user.Username,
-            user.FullName
-        });
+        var response = await _userService.GetUsersAsync();
+        return StatusCode(response.Status, response);
     }
-    //[Authorize] don't add this if don't want to protect this route
-    [HttpGet("unprotectedInfo")]
-    public IActionResult GetUnProtectedUserInfo()
+
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> GetUserById(int id)
     {
-        return Ok(new
+        var response = await _userService.GetUserByIdAsync(id);
+        return StatusCode(response.Status, response);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateUser([FromBody] UserCreateRequest request)
+    {
+        if (!ModelState.IsValid)
         {
-            a = "la con ga !!!",
-            id = 101
-        });
+            return StatusCode(400, StoreManagement.Response.Fail("Dữ liệu không hợp lệ", 400));
+        }
+
+        var response = await _userService.CreateUserAsync(request);
+        return StatusCode(response.Status, response);
+    }
+
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> UpdateUser(int id, [FromBody] UserUpdateRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return StatusCode(400, StoreManagement.Response.Fail("Dữ liệu không hợp lệ", 400));
+        }
+
+        var response = await _userService.UpdateUserAsync(id, request);
+        return StatusCode(response.Status, response);
+    }
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> DeleteUser(int id)
+    {
+        var response = await _userService.DeleteUserAsync(id);
+        return StatusCode(response.Status, response);
     }
 }
+
