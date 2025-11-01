@@ -7,5 +7,5 @@ namespace StoreManagement.Services;
 public interface IAuthService
 {
     Task<Response> loginAsync(LoginRequest dto);
-
+    Task<Response> logoutAsync(String jwtToken);
 }

@@ -15,10 +15,12 @@ public class AuthService : IAuthService
 {
     private readonly StoreManagementDbContext _context;
     private readonly IConfiguration _configuration;
-    public AuthService(StoreManagementDbContext context, IConfiguration configuration)
+    private readonly IRedisCacheService _redisCacheService;
+    public AuthService(StoreManagementDbContext context, IConfiguration configuration, IRedisCacheService redisCacheService)
     {
         _context = context;
         _configuration = configuration;
+        _redisCacheService = redisCacheService;
     }
     public async Task<Response> loginAsync(LoginRequest loginRequest)
     {
@@ -36,7 +38,25 @@ public class AuthService : IAuthService
         }
 
         var token = GenerateJwtToken(user);
-        return Response.Success(new LoginResponse { Token = token, Username = user.Username, Role = user.Role }, "Đăng nhập thành công");
+        string cacheKey = "jwt:" + token;
+        await _redisCacheService.SetCacheAsync(cacheKey, "active", TimeSpan.FromDays(2));
+
+        return Response.Success(
+            new LoginResponse { Token = token, Username = user.Username, Role = user.Role },
+            "Đăng nhập thành công"
+        );
+    }
+    public async Task<Response> logoutAsync(String jwtToken)
+    {
+
+        string cacheKey = "jwt:" + jwtToken;
+        await _redisCacheService.RemoveCacheAsync(cacheKey);
+
+        return Response.Success(new
+        {
+            message = "Logout successfully",
+            status = "success"
+        });
     }
 
     private string GenerateJwtToken(User user)

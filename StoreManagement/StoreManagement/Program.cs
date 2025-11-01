@@ -25,6 +25,7 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ISupplierService, SupplierService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Ioc Repository
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
@@ -87,6 +88,10 @@ builder.Services.AddAuthentication(options =>
                 context.Fail("Token not found in Redis.");
             }
         }
+        /* header for authenticated requests:
+          -H 'Authorization: Bearer [token]'
+
+         */
     };
 });
 
