@@ -26,6 +26,7 @@ builder.Services.AddScoped<ISupplierService, SupplierService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
 
 // Ioc Repository
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
@@ -35,6 +36,7 @@ builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 
 // Configure MySQL with EF Core
 var connectionString = builder.Configuration.GetConnectionString("MySql");
