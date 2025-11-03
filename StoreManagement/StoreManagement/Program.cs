@@ -9,12 +9,15 @@ using StoreManagement.Services.Impl;
 using StoreManagement.Services;
 using StoreManagement.Repository.Impl;
 using StoreManagement.Repository;
+using StoreManagement.socket;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
-
+builder.Services.AddSingleton<WebSocketConnectionManager>();
+builder.Services.AddSingleton<SocketService>();
+builder.Services.AddHostedService(provider => provider.GetRequiredService<SocketService>());
 
 // Ioc Service
 builder.Services.AddScoped<IOrderService, OrderService>();
