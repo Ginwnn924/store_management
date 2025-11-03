@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using StoreManagement.DTOs.Request;
 using StoreManagement.Models;
 
 namespace StoreManagement.Services
@@ -8,5 +9,6 @@ namespace StoreManagement.Services
     {
         Task<Response> GetOrders();
         Task<Response> GetOrderById(int id);
+        Task<Response> CreateOrder(OrderRequest request);
     }
 }

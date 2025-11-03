@@ -16,9 +16,11 @@ namespace StoreManagement.Repository.Impl
             _dbSet = context.Set<Order>();
         }
 
-        public Task<Order> AddAsync(Order entity)
+        public async Task<Order> AddAsync(Order entity)
         {
-            throw new NotImplementedException();
+            var entry = await _dbSet.AddAsync(entity);
+            await _context.SaveChangesAsync();
+            return entry.Entity;
         }
 
         public Task<bool> DeleteAsync(int id)
