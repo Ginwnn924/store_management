@@ -7,6 +7,7 @@ using StoreManagement.Models;
 using StoreManagement.Repository;
 using Order = StoreManagement.Models.Order;
 
+
 namespace StoreManagement.Services.Impl
 {
     public class OrderService : IOrderService
@@ -50,9 +51,26 @@ namespace StoreManagement.Services.Impl
                     PaymentDate = DateTime.Now,
                     PaymentMethod = PaymentMethod.cash.ToString(),
                 };
-                _paymentRepository.CreatePaymentAsync(payment);
+                // Ensure we await the repository call to keep the DbContext alive within the request scope
+                await _paymentRepository.CreatePaymentAsync(payment);
             }
             return Response.Success("Order created successfully");
+        }
+        public async Task<long> CreateOrderOnly(OrderRequest request)
+        {
+            Order createdOrder = null;
+            if (request.PaymentMethod == Enum.PaymentMethod.cash)
+            {
+                request.OrderStatus = Enum.OrderStatus.paid;
+                Order newOrder = _orderMapper.ToModel(request);
+                newOrder.Status = Enum.OrderStatus.pending.ToString();
+                createdOrder = await _orderRepository.AddAsync(newOrder);
+            }
+            if (createdOrder == null)
+            {
+                throw new Exception("Order creation failed");
+            }
+            return createdOrder.OrderId;
         }
     }
 }

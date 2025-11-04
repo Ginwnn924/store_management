@@ -1,4 +1,5 @@
 using StoreManagement;
+using StoreManagement.Models;
 
 namespace StoreManagement.Services
 {
@@ -6,6 +7,7 @@ namespace StoreManagement.Services
     {
         Task<Response> GetPaymentsAsync();
         Task<Response> GetPaymentByIdAsync(int id);
+        Task<Response> AddAsync(Payment payment);
     }
 }
 

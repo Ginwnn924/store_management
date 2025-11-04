@@ -48,5 +48,13 @@ namespace StoreManagement.Repository.Impl
         {
             throw new NotImplementedException();
         }
+
+        public async Task<int> UpdateStatusAsync(int orderId, string status)
+        {
+            var stub = new Order { OrderId = orderId, Status = status };
+            _context.Attach(stub);
+            _context.Entry(stub).Property(o => o.Status).IsModified = true;
+            return await _context.SaveChangesAsync();
+        }
     }
 }

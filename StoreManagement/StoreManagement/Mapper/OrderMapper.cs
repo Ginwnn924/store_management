@@ -16,8 +16,8 @@ namespace StoreManagement.Mapper
         {
             OrderResponse response = new OrderResponse();
             response.Id = entity.OrderId;
-            response.employeeName = entity.User.FullName;
-            response.customerName = entity.Customer?.Name;
+            response.employeeName = entity.User?.FullName ?? string.Empty;
+            response.customerName = entity.Customer?.Name ?? string.Empty; // Fixes CS8601
             response.totalAmount = entity.TotalAmount;
             response.discountAmount = entity.DiscountAmount;
             response.orderDate = entity.OrderDate;
