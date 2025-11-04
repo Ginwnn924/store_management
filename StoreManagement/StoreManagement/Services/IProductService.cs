@@ -1,9 +1,11 @@
 using StoreManagement.DTOs.Request;
+using StoreManagement.DTOs.Request.Filter;
 
 namespace StoreManagement.Services
 {
     public interface IProductService
     {
+        Task<Response> GetAllProductsAsync(ProductFilterRequest filter);
         Task<Response> GetAllProductsAsync();
         Task<Response> GetProductByIdAsync(int id);
         Task<Response> CreateProductAsync(ProductCreateRequest request);
