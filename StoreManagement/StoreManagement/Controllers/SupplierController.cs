@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using StoreManagement.DTOs;
+using StoreManagement.DTOs.Request.Filter;
 using StoreManagement.Services;
 using StoreManagement;
 
@@ -17,9 +18,23 @@ public class SupplierController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetSuppliers()
+    public async Task<IActionResult> GetSuppliers(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
     {
-        var response = await _supplierService.GetSuppliersAsync();
+        var filter = new SupplierFilterRequest
+        {
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+        var response = await _supplierService.GetSuppliersAsync(filter);
+        return StatusCode(response.Status, response);
+    }
+
+    [HttpGet("filter")]
+    public async Task<IActionResult> FilterSuppliers([FromQuery] SupplierFilterRequest request)
+    {
+        var response = await _supplierService.GetSuppliersAsync(request);
         return StatusCode(response.Status, response);
     }
 

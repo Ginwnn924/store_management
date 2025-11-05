@@ -1,4 +1,7 @@
 using StoreManagement.DTOs;
+using StoreManagement.DTOs.Request.Filter;
+using StoreManagement.DTOs.Response;
+using StoreManagement.Extensions;
 using StoreManagement.Models;
 using StoreManagement.Repository;
 using VNPAY.NET.Models;
@@ -31,6 +34,30 @@ namespace StoreManagement.Services.Impl
                 .ToList();
 
             return Response.Success(paymentDtos);
+        }
+
+        public async Task<Response> GetPaymentsAsync(PaymentFilterRequest filter)
+        {
+            var query = _dbContext.Payments.AsNoTracking().AsQueryable();
+            query = query.ApplyFilters(filter);
+
+            var totalItems = await query.CountAsync();
+            var items = await query
+                .OrderByDescending(p => p.PaymentDate)
+                .Skip((filter.PageNumber - 1) * filter.PageSize)
+                .Take(filter.PageSize)
+                .Select(p => new PaymentDto
+                {
+                    PaymentId = p.PaymentId,
+                    OrderId = p.OrderId,
+                    Amount = p.Amount,
+                    PaymentMethod = p.PaymentMethod,
+                    PaymentDate = p.PaymentDate
+                })
+                .ToListAsync();
+
+            var paged = new PagedResponse<PaymentDto>(items, totalItems, filter.PageNumber, filter.PageSize);
+            return Response.Success(paged);
         }
 
         public async Task<Response> GetPaymentByIdAsync(int id)

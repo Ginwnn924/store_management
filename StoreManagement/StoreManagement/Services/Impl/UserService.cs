@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using StoreManagement.Data;
 using StoreManagement.DTOs.Request;
+using StoreManagement.DTOs.Request.Filter;
 using StoreManagement.DTOs.Response;
 using StoreManagement.Models;
+using StoreManagement.Extensions;
 
 namespace StoreManagement.Services.Impl;
 
@@ -20,6 +22,22 @@ public class UserService : IUserService
         var users = await _dbContext.Users.AsNoTracking().ToListAsync();
         var data = users.Select(MapToResponse).ToList();
         return Response.Success(data);
+    }
+
+    public async Task<Response> GetUsersAsync(UserFilterRequest filter)
+    {
+        var query = _dbContext.Users.AsNoTracking().AsQueryable();
+        query = query.ApplyFilters(filter);
+
+        var totalItems = await query.CountAsync();
+        var users = await query
+            .Skip((filter.PageNumber - 1) * filter.PageSize)
+            .Take(filter.PageSize)
+            .ToListAsync();
+
+        var items = users.Select(MapToResponse).ToList();
+        var paged = new PagedResponse<UserResponse>(items, totalItems, filter.PageNumber, filter.PageSize);
+        return Response.Success(paged);
     }
 
     public async Task<Response> GetUserByIdAsync(int id)

@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using StoreManagement.Data;
 using StoreManagement.DTOs;
+using StoreManagement.DTOs.Request.Filter;
+using StoreManagement.DTOs.Response;
+using StoreManagement.Extensions;
 using StoreManagement.Models;
 
 namespace StoreManagement.Services.Impl
@@ -18,6 +21,28 @@ namespace StoreManagement.Services.Impl
         {
             var suppliers = await _dbContext.Suppliers.AsNoTracking().ToListAsync();
             return Response.Success(suppliers);
+        }
+
+        public async Task<Response> GetSuppliersAsync(SupplierFilterRequest filter)
+        {
+            var query = _dbContext.Suppliers.AsNoTracking().AsQueryable();
+            query = query.ApplyFilters(filter);
+
+            var totalItems = await query.CountAsync();
+            var items = await query
+                .Skip((filter.PageNumber - 1) * filter.PageSize)
+                .Take(filter.PageSize)
+                .Select(s => new SupplierDto
+                {
+                    Name = s.Name,
+                    Phone = s.Phone,
+                    Email = s.Email,
+                    Address = s.Address
+                })
+                .ToListAsync();
+
+            var paged = new PagedResponse<SupplierDto>(items, totalItems, filter.PageNumber, filter.PageSize);
+            return Response.Success(paged);
         }
 
         public async Task<Response> GetSupplierByIdAsync(int id)
