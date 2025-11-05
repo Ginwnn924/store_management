@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using StoreManagement.DTOs.Request;
+using StoreManagement.DTOs.Request.Filter;
 using StoreManagement.Services;
 
 namespace StoreManagement.Controllers
@@ -15,13 +16,25 @@ namespace StoreManagement.Controllers
             _customerService = customerService;
         }
 
-        /// <summary>
-        /// Get all customers
-        /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetAllCustomers()
+        public async Task<IActionResult> GetAllCustomers(
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10)
         {
-            var response = await _customerService.GetAllCustomersAsync();
+            var filter = new CustomerFilterRequest
+            {
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
+            var response = await _customerService.GetAllCustomersAsync(filter);
+            return StatusCode(response.Status, response);
+        }
+
+        [HttpGet("filter")]
+        public async Task<IActionResult> FilterCustomer([FromQuery] CustomerFilterRequest request
+            )
+        {
+            var response = await _customerService.GetAllCustomersAsync(request);
             return StatusCode(response.Status, response);
         }
 

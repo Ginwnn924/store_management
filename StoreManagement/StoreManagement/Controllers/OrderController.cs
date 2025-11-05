@@ -2,15 +2,10 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using StoreManagement.Data;
-using StoreManagement.DTOs;
+using StoreManagement.DTOs.Request.Filter;
 using StoreManagement.DTOs.Request;
-using StoreManagement.DTOs.Response;
-using StoreManagement.Models;
 using StoreManagement.Services;
-using VNPAY.NET;
-using VNPAY.NET.Enums;
-using VNPAY.NET.Models;
-using VNPAY.NET.Utilities;
+using StoreManagement.Services.Impl;
 
 namespace StoreManagement.Controllers;
 
@@ -42,15 +37,42 @@ public class OrderController : Controller
         _paymentService = paymentService;
     }
 
-
     [HttpGet]
-    public async Task<IActionResult> GetOrders()
+    public async Task<IActionResult> GetAllOrders(
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10)
     {
-        var response = await _orderService.GetOrders();
-
-        // Có thể trả trực tiếp object response (ASP.NET sẽ serialize thành JSON)
+        var filter = new OrderFilterRequest
+        {
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+        var response = await _orderService.GetAllOrdersAsync(filter);
         return StatusCode(response.Status, response);
+    }
 
+    [HttpGet("filter")]
+    public async Task<IActionResult> FilterOrders([FromQuery] OrderFilterRequest filter)
+    {
+        var response = await _orderService.GetAllOrdersAsync(filter);
+        return StatusCode(response.Status, response);
+    }
+
+
+    //[HttpGet]
+    //public async Task<IActionResult> GetOrders()
+    //{
+    //    var response = await _orderService.GetOrders();
+
+    //    // Có thể trả trực tiếp object response (ASP.NET sẽ serialize thành JSON)
+    //    return StatusCode(response.Status, response);
+
+    //}
+    [HttpPost]
+    public async Task<IActionResult> CreateOrder([FromBody] OrderRequest request)
+    {
+        var response = await _orderService.CreateOrder(request);
+        return StatusCode(response.Status, response);
     }
 
     [HttpPost]

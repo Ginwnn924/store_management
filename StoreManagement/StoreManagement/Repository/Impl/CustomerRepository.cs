@@ -9,6 +9,14 @@ namespace StoreManagement.Repository.Impl
         private readonly StoreManagementDbContext _context;
         private readonly DbSet<Customer> _dbSet;
 
+
+        public IQueryable<Customer> GetQueryable()
+        {
+            return _context.Customers
+                .Include(c => c.Orders)
+                .AsQueryable();
+        }
+
         public CustomerRepository(StoreManagementDbContext context)
         {
             _context = context;

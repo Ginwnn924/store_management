@@ -1,4 +1,8 @@
+using Microsoft.EntityFrameworkCore;
 using StoreManagement.DTOs.Request;
+using StoreManagement.DTOs.Request.Filter;
+using StoreManagement.DTOs.Response;
+using StoreManagement.Extensions;
 using StoreManagement.Mapper;
 using StoreManagement.Repository;
 
@@ -9,9 +13,36 @@ namespace StoreManagement.Services.Impl
         private readonly ICustomerRepository _customerRepository;
         private readonly CustomerMapper _customerMapper = new CustomerMapper();
 
+
         public CustomerService(ICustomerRepository customerRepository)
         {
             _customerRepository = customerRepository;
+        }
+
+        public async Task<Response> GetAllCustomersAsync(CustomerFilterRequest filter)
+        {
+            try
+            {
+                var query = _customerRepository.GetQueryable();
+                query = query.ApplyFilters(filter);
+                var totalItems = await query.CountAsync();
+                var customers = await query
+                    .Skip((filter.PageNumber - 1) * filter.PageSize)
+                    .Take(filter.PageSize)
+                    .ToListAsync();
+                var customerResponses = _customerMapper.ToDtoList(customers).ToList();
+                var pagedResponse = new PagedResponse<CustomerResponse>(
+                    customerResponses,
+                    totalItems,
+                    filter.PageNumber,
+                    filter.PageSize
+                );
+                return Response.Success(pagedResponse, "Customers retrieved successfully");
+            }
+            catch (Exception ex)
+            {
+                return Response.Fail($"Error retrieving customers: {ex.Message}", 500);
+            }
         }
 
         public async Task<Response> GetAllCustomersAsync()
