@@ -10,10 +10,22 @@ namespace StoreManagement.Repository.Impl
         private readonly StoreManagementDbContext _context;
         private readonly DbSet<Order> _dbSet;
 
+
+
         public OrderRepository(StoreManagementDbContext context)
         {
             _context = context;
             _dbSet = context.Set<Order>();
+        }
+
+        public IQueryable<Order> GetQueryable()
+        {
+            return _context.Orders
+                .Include(o => o.User)
+                .Include(o => o.Customer)
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+                .AsQueryable();
         }
 
         public Task<Order> AddAsync(Order entity)
