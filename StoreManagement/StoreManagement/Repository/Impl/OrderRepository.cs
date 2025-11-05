@@ -18,6 +18,7 @@ namespace StoreManagement.Repository.Impl
             _dbSet = context.Set<Order>();
         }
 
+        public async Task<Order> AddAsync(Order entity)
         public IQueryable<Order> GetQueryable()
         {
             return _context.Orders
@@ -60,6 +61,14 @@ namespace StoreManagement.Repository.Impl
         public Task<Order> UpdateAsync(Order entity)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<int> UpdateStatusAsync(int orderId, string status)
+        {
+            var stub = new Order { OrderId = orderId, Status = status };
+            _context.Attach(stub);
+            _context.Entry(stub).Property(o => o.Status).IsModified = true;
+            return await _context.SaveChangesAsync();
         }
     }
 }

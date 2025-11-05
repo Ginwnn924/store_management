@@ -11,6 +11,10 @@ using StoreManagement.Models;
 using StoreManagement.Repository;
 using StoreManagement.Repository.Impl;
 using Order = StoreManagement.Models.Order;
+using VNPAY.NET;
+using VNPAY.NET.Enums;
+using VNPAY.NET.Models;
+using VNPAY.NET.Utilities;
 
 namespace StoreManagement.Services.Impl
 {
@@ -18,6 +22,26 @@ namespace StoreManagement.Services.Impl
     {
         private readonly IOrderRepository _orderRepository;
         private readonly IPaymentRepository _paymentRepository;
+        private readonly IVnpay _vnpay;
+        private readonly IConfiguration _configuration;
+        private readonly OrderMapper _orderMapper = new OrderMapper();
+
+        public OrderService(IOrderRepository orderRepository, IPaymentRepository paymentRepository, IVnpay vnPayservice, IConfiguration configuration)
+        {
+            _orderRepository = orderRepository;
+            _paymentRepository = paymentRepository;
+
+            _vnpay = vnPayservice;
+            _configuration = configuration;
+
+
+            var tmnCode = _configuration["Vnpay:TmnCode"] ?? throw new ArgumentNullException("Vnpay:TmnCode");
+            var hashSecret = _configuration["Vnpay:HashSecret"] ?? throw new ArgumentNullException("Vnpay:HashSecret");
+            var baseUrl = _configuration["Vnpay:BaseUrl"] ?? throw new ArgumentNullException("Vnpay:BaseUrl");
+            var callbackUrl = _configuration["Vnpay:CallbackUrl"] ?? throw new ArgumentNullException("Vnpay:CallbackUrl");
+
+            _vnpay.Initialize(tmnCode, hashSecret, baseUrl, callbackUrl);
+
 
         private readonly OrderMapper _orderMapper = new OrderMapper();
 
@@ -83,6 +107,58 @@ namespace StoreManagement.Services.Impl
                     PaymentDate = DateTime.Now,
                     PaymentMethod = PaymentMethod.cash.ToString(),
                 };
+                // Ensure we await the repository call to keep the DbContext alive within the request scope
+                await _paymentRepository.CreatePaymentAsync(payment);
+            }
+            return Response.Success("Order created successfully");
+        }
+        public async Task<long> CreateOrderOnly(OrderRequest request)
+        {
+            Order createdOrder = null;
+            if (request.PaymentMethod == Enum.PaymentMethod.cash)
+            {
+                request.OrderStatus = Enum.OrderStatus.paid;
+                Order newOrder = _orderMapper.ToModel(request);
+                newOrder.Status = Enum.OrderStatus.pending.ToString();
+                createdOrder = await _orderRepository.AddAsync(newOrder);
+            }
+            if (createdOrder == null)
+            {
+                throw new Exception("Order creation failed");
+            }
+            return createdOrder.OrderId;
+        }
+
+        public async Task<(long OrderId, string PaymentUrl)> CreateOnlyOrder(OrderRequest request, string ipAddress)
+        {
+            // Map the order request to the Order model
+            Order newOrder = _orderMapper.ToModel(request);
+            newOrder.Status = Enum.OrderStatus.pending.ToString();
+
+            Order createdOrder = await _orderRepository.AddAsync(newOrder);
+            if (createdOrder == null)
+            {
+                throw new Exception("Order creation failed");
+            }
+
+            long paymentAmount = request.totalAmount - request.discountAmount;
+
+            var paymentRequest = new PaymentRequest
+            {
+                PaymentId = createdOrder.OrderId,
+                Money = paymentAmount,
+                Description = $"Order Id :{createdOrder.OrderId}- Amount :{paymentAmount}",
+                IpAddress = ipAddress,
+                BankCode = BankCode.ANY,
+                CreatedDate = DateTime.Now,
+                Currency = Currency.VND,
+                Language = DisplayLanguage.Vietnamese
+            };
+
+            var paymentUrl = _vnpay.GetPaymentUrl(paymentRequest);
+
+            return (createdOrder.OrderId, paymentUrl);
+        }
                 _paymentRepository.CreatePaymentAsync(payment);
             }
             return Response.Success("Order created successfully");

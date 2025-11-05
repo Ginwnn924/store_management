@@ -12,5 +12,6 @@ namespace StoreManagement.Services
         Task<Response> GetOrders();
         Task<Response> GetOrderById(int id);
         Task<Response> CreateOrder(OrderRequest request);
+        Task<(long OrderId, string PaymentUrl)> CreateOnlyOrder(OrderRequest request, string ipAddress);
     }
 }
