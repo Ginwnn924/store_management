@@ -12,7 +12,13 @@ namespace StoreManagement.Repository.Impl
         {
             _context = context;
         }
-
+        public IQueryable<Inventory> GetQueryable()
+        {
+            return _context.Inventories
+                .Include(i => i.Product) 
+                .AsQueryable();
+        }
+       
         public async Task<IEnumerable<Inventory>> GetAllAsync()
         {
             return await _context.Inventories
@@ -49,7 +55,13 @@ namespace StoreManagement.Repository.Impl
             await _context.SaveChangesAsync();
             return true;
         }
+        public async Task<IEnumerable<Inventory>> SearchByProductNameAsync(string productName)
+        {
+            return await _context.Inventories
+                .Include(i => i.Product)
+                .Where(i => i.Product.ProductName.ToLower().Contains(productName.ToLower()))
+                .ToListAsync();
+        }
 
-       
     }
 }

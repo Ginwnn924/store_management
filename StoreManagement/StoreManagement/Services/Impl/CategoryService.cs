@@ -1,7 +1,10 @@
-﻿using StoreManagement.DTOs.Response;
+﻿using Microsoft.EntityFrameworkCore;
+using StoreManagement.DTOs.Response;
 using StoreManagement.Models;
 using StoreManagement.Repository;
 using StoreManagement.Mapper;
+using StoreManagement.DTOs.Request.Filter;
+using StoreManagement.Extensions;
 
 namespace StoreManagement.Services.Impl
 {
@@ -12,6 +15,36 @@ namespace StoreManagement.Services.Impl
         public CategoryService(ICategoryRepository categoryRepository)
         {
             _categoryRepository = categoryRepository;
+        }
+
+        public async Task<Response> FilterAsync(CategoryFilterRequest filter)
+        {
+            var query = _categoryRepository.GetQueryable();
+            query = query.ApplyFilters(filter);
+
+            int totalRecords = await query.CountAsync();
+
+            var items = await query
+                .OrderBy(c => c.CategoryId)
+                .Skip((filter.PageNumber - 1) * filter.PageSize)
+                .Take(filter.PageSize)
+                .ToListAsync();
+
+            var responseItems = items.Select(c => c.ToCategoryResponse()).ToList();
+
+            var paged = new PagedResponse<CategoryResponse>(
+                responseItems,
+                totalRecords,
+                filter.PageNumber,
+                filter.PageSize
+            );
+
+            return new Response
+            {
+                Status = 200,
+                Message = "Lấy danh sách danh mục thành công",
+                Data = paged
+            };
         }
 
         public async Task<IEnumerable<CategoryResponse>> GetAllCategoriesAsync()
@@ -50,6 +83,12 @@ namespace StoreManagement.Services.Impl
         public async Task<bool> DeleteCategoryAsync(int id)
         {
             return await _categoryRepository.DeleteAsync(id);
+        }
+        public async Task<IEnumerable<CategoryResponse>> SearchByNameAsync(string categoryName)
+        {
+           
+            var results = await _categoryRepository.SearchByNameAsync(categoryName.Trim());
+            return results.Select(c => c.ToCategoryResponse());
         }
     }
 }
