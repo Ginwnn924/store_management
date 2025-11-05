@@ -4,6 +4,7 @@ using Microsoft.Extensions.Primitives;
 using StoreManagement.Data;
 using StoreManagement.DTOs;
 using StoreManagement.DTOs.Request;
+using StoreManagement.DTOs.Response;
 using StoreManagement.Models;
 using StoreManagement.Services;
 using VNPAY.NET;
@@ -58,28 +59,24 @@ public class OrderController : Controller
     }
     
     [HttpPost("/api/Order/vnpay")]
-    public async Task<ActionResult<string>> CreateVnpayOrder([FromBody] OrderRequest orderRequest)
+    public async Task<IActionResult> CreateVnpayOrder([FromBody] OrderRequest orderRequest)
     {
         try
         {
-            long orderId = await _orderService.CreateOrderOnly(orderRequest); 
+            // Get the client's IP address
             var ipAddress = NetworkHelper.GetIpAddress(HttpContext);
 
-            var paymentRequest = new PaymentRequest
+            // Delegate the order creation and payment URL generation to the service
+            var (orderId, paymentUrl) = await _orderService.CreateOnlyOrder(orderRequest, ipAddress);
+
+            // Create the response object
+            var redirectResponse = new OrderRedirectResponse
             {
-                PaymentId = orderId,
-                Money = orderRequest.totalAmount - orderRequest.discountAmount,
-                Description = "Thanh toán store_management",
-                IpAddress = ipAddress,
-                BankCode = BankCode.ANY,
-                CreatedDate = DateTime.Now,
-                Currency = Currency.VND,
-                Language = DisplayLanguage.Vietnamese
+                RedirectUrl = paymentUrl
             };
 
-            var paymentUrl = _vnpay.GetPaymentUrl(paymentRequest);
-
-            return Created(paymentUrl, paymentUrl);
+            // Return the response
+            return StatusCode(200, new { Status = 200, Data = redirectResponse });
         }
         catch (Exception ex)
         {
