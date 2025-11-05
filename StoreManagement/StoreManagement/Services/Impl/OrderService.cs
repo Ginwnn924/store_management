@@ -95,22 +95,19 @@ namespace StoreManagement.Services.Impl
             Order newOrder = _orderMapper.ToModel(request);
             newOrder.Status = Enum.OrderStatus.pending.ToString();
 
-            // Save the order to the database
             Order createdOrder = await _orderRepository.AddAsync(newOrder);
             if (createdOrder == null)
             {
                 throw new Exception("Order creation failed");
             }
 
-            // Calculate the payment amount
             long paymentAmount = request.totalAmount - request.discountAmount;
 
-            // Create the payment request
             var paymentRequest = new PaymentRequest
             {
                 PaymentId = createdOrder.OrderId,
                 Money = paymentAmount,
-                Description = "Thanh toán store_management",
+                Description = $"Order Id :{createdOrder.OrderId}- Amount :{paymentAmount}",
                 IpAddress = ipAddress,
                 BankCode = BankCode.ANY,
                 CreatedDate = DateTime.Now,
@@ -118,10 +115,8 @@ namespace StoreManagement.Services.Impl
                 Language = DisplayLanguage.Vietnamese
             };
 
-            // Generate the payment URL using VNPAY
             var paymentUrl = _vnpay.GetPaymentUrl(paymentRequest);
 
-            // Return the order ID and payment URL
             return (createdOrder.OrderId, paymentUrl);
         }
     }

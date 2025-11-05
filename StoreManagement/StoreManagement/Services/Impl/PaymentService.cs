@@ -1,13 +1,16 @@
 using StoreManagement.DTOs;
 using StoreManagement.Models;
 using StoreManagement.Repository;
+using VNPAY.NET.Models;
+
 namespace StoreManagement.Services.Impl
 {
     public class PaymentService : IPaymentService
     {
         private readonly IOrderRepository _orderRepository;
         private readonly IPaymentRepository _paymentRepository;
-        public PaymentService(IPaymentRepository paymentRepository,IOrderRepository orderRepository)
+
+        public PaymentService(IPaymentRepository paymentRepository, IOrderRepository orderRepository)
         {
             _paymentRepository = paymentRepository;
             _orderRepository = orderRepository;
@@ -52,22 +55,47 @@ namespace StoreManagement.Services.Impl
         {
             try
             {
-                
                 var newStatus = Enum.OrderStatus.paid.ToString();
                 await _orderRepository.UpdateStatusAsync(payment.OrderId, newStatus);
-                Console.WriteLine($"Console: 3 Update order status {payment.OrderId} {newStatus}");
 
-                Console.WriteLine("Console 4: bat dau create payment");
                 await _paymentRepository.CreatePaymentAsync(payment);
-
-                Console.WriteLine("Console final: DA LU THANH TOAN");
-                return Response.Success("Thêm thanh toán thành công");
+                // Return order id in Data to support redirect building
+                return Response.Success(payment.OrderId);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Console ERROR: {ex.Message}");
-                return Response.Fail("An error occurred while processing the payment", 500);
+                return Response.Fail($"An error occurred while processing the payment: {ex.Message}", 500);
             }
+        }
+
+        public async Task<Response> ProcessVnpayCallbackAsync(PaymentResult paymentResult, string? vnpAmountStr)
+        {
+            if (string.IsNullOrWhiteSpace(vnpAmountStr) || !long.TryParse(vnpAmountStr, out var vnpAmountLong))
+            {
+                return Response.Fail("Invalid payment amount.", 400);
+            }
+
+            var amount = (decimal)vnpAmountLong / 100m;
+
+            if (!paymentResult.IsSuccess)
+            {
+                return Response.Fail($"{paymentResult.PaymentResponse.Description}. {paymentResult.TransactionStatus.Description}.", 400);
+            }
+
+            var orderId = paymentResult.PaymentId;
+            var paymentMethod = paymentResult.BankingInfor?.BankCode == "NCB"
+                ? Enum.PaymentMethod.bank_transfer.ToString()
+                : Enum.PaymentMethod.card.ToString();
+
+            var payment = new Payment
+            {
+                OrderId = (int)orderId,
+                Amount = amount,
+                PaymentDate = paymentResult.Timestamp,
+                PaymentMethod = paymentMethod
+            };
+            await AddAsync(payment);
+            return Response.Success(payment.OrderId);
         }
     }
 }

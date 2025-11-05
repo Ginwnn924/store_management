@@ -22,7 +22,8 @@ public class OrderController : Controller
     private readonly IPaymentService _paymentService;
     private readonly IVnpay _vnpay;
     private readonly IConfiguration _configuration;
-
+    private readonly string _callbackUrl;
+    private readonly string _returnFontEndUrl;
     public OrderController(IOrderService orderService, IVnpay vnPayservice, IConfiguration configuration, ILogger<OrderController> logger, IPaymentService paymentService)
     {
 
@@ -34,9 +35,10 @@ public class OrderController : Controller
         var tmnCode = _configuration["Vnpay:TmnCode"] ?? throw new ArgumentNullException("Vnpay:TmnCode");
         var hashSecret = _configuration["Vnpay:HashSecret"] ?? throw new ArgumentNullException("Vnpay:HashSecret");
         var baseUrl = _configuration["Vnpay:BaseUrl"] ?? throw new ArgumentNullException("Vnpay:BaseUrl");
-        var callbackUrl = _configuration["Vnpay:CallbackUrl"] ?? throw new ArgumentNullException("Vnpay:CallbackUrl");
-
-        _vnpay.Initialize(tmnCode, hashSecret, baseUrl, callbackUrl);
+        _callbackUrl = _configuration["Vnpay:CallbackUrl"] ?? throw new ArgumentNullException("Vnpay:CallbackUrl");
+        _returnFontEndUrl = _configuration["Vnpay:ReturnFontEndUrl"] ?? throw new ArgumentNullException("Vnpay:ReturnFontEndUrl");
+        
+        _vnpay.Initialize(tmnCode, hashSecret, baseUrl, _callbackUrl);
         _paymentService = paymentService;
     }
 
@@ -61,88 +63,47 @@ public class OrderController : Controller
     [HttpPost("/api/Order/vnpay")]
     public async Task<IActionResult> CreateVnpayOrder([FromBody] OrderRequest orderRequest)
     {
-        try
+
+        var ipAddress = NetworkHelper.GetIpAddress(HttpContext);
+
+        var (orderId, paymentUrl) = await _orderService.CreateOnlyOrder(orderRequest, ipAddress);
+
+        var redirectResponse = new OrderRedirectResponse
         {
-            // Get the client's IP address
-            var ipAddress = NetworkHelper.GetIpAddress(HttpContext);
+            RedirectUrl = paymentUrl
+        };
 
-            // Delegate the order creation and payment URL generation to the service
-            var (orderId, paymentUrl) = await _orderService.CreateOnlyOrder(orderRequest, ipAddress);
-
-            // Create the response object
-            var redirectResponse = new OrderRedirectResponse
-            {
-                RedirectUrl = paymentUrl
-            };
-
-            // Return the response
-            return StatusCode(200, new { Status = 200, Data = redirectResponse });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
+        return StatusCode(200, new { Status = 200, Data = redirectResponse });
     }
     
-
+    
+    
     [HttpGet("/api/vnpay/check-result/callback")]
-    public async Task<ActionResult<string>> Callback()
+    public async Task<IActionResult> Callback()
     {
-        if (Request.QueryString.HasValue)
+        if (!Request.QueryString.HasValue)
         {
-            try
-            {
-                var paymentResult = _vnpay.GetPaymentResult(Request.Query);
-                var resultDescription = $"{paymentResult.PaymentResponse.Description}. {paymentResult.TransactionStatus.Description}.";
-                var vnpAmountStr = Request.Query["vnp_Amount"].FirstOrDefault();
-                decimal vnAmountDecimal;
-
-                if (long.TryParse(vnpAmountStr, out long vnpAmountLong))
-                {
-                    vnAmountDecimal = (decimal)vnpAmountLong;
-                    vnAmountDecimal = vnAmountDecimal / 100;
-
-                    Console.WriteLine($"Successfully parsed and corrected: {vnAmountDecimal}");
-                }
-                else
-                {   
-                    throw new Exception("no payment amount");
-                }
-
-
-                if (paymentResult.IsSuccess)
-                {
-
-                    var timestamp = paymentResult.Timestamp;
-                    var orderId = paymentResult.PaymentId;
-                    String paymentMethod;
-                    if (paymentResult.BankingInfor.BankCode == "NCB")
-                    {
-                        paymentMethod = Enum.PaymentMethod.bank_transfer.ToString();
-                    } else
-                    {
-                        paymentMethod = Enum.PaymentMethod.card.ToString();
-                    }
-
-                        Payment payment = new Payment()
-                        {
-                            OrderId = (int)orderId,
-                            Amount = vnAmountDecimal,
-                            PaymentDate = timestamp,
-                            PaymentMethod = paymentMethod
-                        };
-                    await _paymentService.AddAsync(payment);
-                    return Ok("So tien thanh toan =" + vnpAmountStr + "; OderId: " + orderId);
-                }
-
-                return BadRequest(resultDescription);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            return NotFound("Không tìm thấy thông tin thanh toán.");
         }
 
-        return NotFound("Không tìm thấy thông tin thanh toán.");
+        try
+        {
+            var paymentResult = _vnpay.GetPaymentResult(Request.Query);
+            var vnpAmountStr = Request.Query["vnp_Amount"].FirstOrDefault();
+            
+            var serviceResponse = await _paymentService.ProcessVnpayCallbackAsync(paymentResult, vnpAmountStr);
+
+            var status = serviceResponse.Status == 200 ? "success" : "fail";
+            var orderId = serviceResponse.Data;
+            Console.WriteLine($" status: {status} order {orderId}");
+            var redirect = $"{_returnFontEndUrl}?status={status}&orderId={orderId}";
+
+            return Redirect(redirect) ;
+        }
+        catch (Exception ex)
+        {   
+            Console.WriteLine($"Exception in VNPAY callback: {ex.Message}");
+            return NotFound(ex.Message);
+        }
     }
 }
