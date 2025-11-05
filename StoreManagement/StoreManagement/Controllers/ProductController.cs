@@ -1,5 +1,6 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using StoreManagement.DTOs.Request;
+using StoreManagement.DTOs.Request.Filter;
 using StoreManagement.Services;
 
 namespace StoreManagement.Controllers
@@ -15,19 +16,27 @@ namespace StoreManagement.Controllers
             _productService = productService;
         }
 
-        /// <summary>
-        /// Get all products
-        /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetAllProducts()
+        public async Task<IActionResult> GetAllProducts(
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10)
         {
-            var response = await _productService.GetAllProductsAsync();
+            var filter = new ProductFilterRequest
+            {
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
+            var response = await _productService.GetAllProductsAsync(filter);
+            return StatusCode(response.Status, response); 
+        }
+
+        [HttpGet("filter")]
+        public async Task<IActionResult> FilterProducts([FromQuery] ProductFilterRequest filter)
+        {
+            var response = await _productService.GetAllProductsAsync(filter);
             return StatusCode(response.Status, response);
         }
 
-        /// <summary>
-        /// Get product by ID
-        /// </summary>
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProductById(int id)
         {
@@ -35,9 +44,6 @@ namespace StoreManagement.Controllers
             return StatusCode(response.Status, response);
         }
 
-        /// <summary>
-        /// Create a new product
-        /// </summary>
         [HttpPost]
         public async Task<IActionResult> CreateProduct([FromBody] ProductCreateRequest request)
         {
@@ -50,9 +56,6 @@ namespace StoreManagement.Controllers
             return StatusCode(response.Status, response);
         }
 
-        /// <summary>
-        /// Update an existing product
-        /// </summary>
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateProduct(int id, [FromBody] ProductUpdateRequest request)
         {
@@ -64,39 +67,13 @@ namespace StoreManagement.Controllers
             return StatusCode(response.Status, response);
         }
 
-        /// <summary>
-        /// Delete a product
-        /// </summary>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
             var response = await _productService.DeleteProductAsync(id);
             return StatusCode(response.Status, response);
         }
-
-        /// <summary>
-        /// Get products by category
-        /// </summary>
-        [HttpGet("category/{categoryId}")]
-        public async Task<IActionResult> GetProductsByCategory(int categoryId)
-        {
-            var response = await _productService.GetProductsByCategoryAsync(categoryId);
-            return StatusCode(response.Status, response);
-        }
-
-        /// <summary>
-        /// Get products by supplier
-        /// </summary>
-        [HttpGet("supplier/{supplierId}")]
-        public async Task<IActionResult> GetProductsBySupplier(int supplierId)
-        {
-            var response = await _productService.GetProductsBySupplierAsync(supplierId);
-            return StatusCode(response.Status, response);
-        }
-
-        /// <summary>
-        /// Get product by barcode
-        /// </summary>
+  
         [HttpGet("barcode/{barcode}")]
         public async Task<IActionResult> GetProductByBarcode(string barcode)
         {
@@ -104,19 +81,6 @@ namespace StoreManagement.Controllers
             return StatusCode(response.Status, response);
         }
 
-        /// <summary>
-        /// Search products by name
-        /// </summary>
-        [HttpGet("search")]
-        public async Task<IActionResult> SearchProductsByName([FromQuery] string name)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                return BadRequest("Search name cannot be empty");
-            }
-
-            var response = await _productService.SearchProductsByNameAsync(name);
-            return StatusCode(response.Status, response);
-        }
+        
     }
 }

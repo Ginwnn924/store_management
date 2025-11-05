@@ -1,9 +1,11 @@
 using StoreManagement.DTOs.Request;
+using StoreManagement.DTOs.Request.Filter;
 
 namespace StoreManagement.Services
 {
     public interface ICustomerService
     {
+        Task<Response> GetAllCustomersAsync(CustomerFilterRequest filter);
         Task<Response> GetAllCustomersAsync();
         Task<Response> GetCustomerByIdAsync(int id);
         Task<Response> CreateCustomerAsync(CustomerCreateRequest request);

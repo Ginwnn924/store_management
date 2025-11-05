@@ -13,4 +13,11 @@
             set => _pageSize = (value > MaxPageSize) ? MaxPageSize : value;
         }
     }
+
+    public class CourseFilterRequest : PaginationRequest
+    {
+        public string? TenHp { get; set; }
+        public List<long>? NhomIdList { get; set; }
+        public string? LoaiHp { get; set; }
+    }
 }

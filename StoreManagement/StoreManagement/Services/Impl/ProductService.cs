@@ -1,4 +1,8 @@
+﻿using Microsoft.EntityFrameworkCore;
 using StoreManagement.DTOs.Request;
+using StoreManagement.DTOs.Request.Filter;
+using StoreManagement.DTOs.Response;
+using StoreManagement.Extensions;
 using StoreManagement.Mapper;
 using StoreManagement.Models;
 using StoreManagement.Repository;
@@ -14,6 +18,34 @@ namespace StoreManagement.Services.Impl
         {
             _productRepository = productRepository;
         }
+
+        public async Task<Response> GetAllProductsAsync(ProductFilterRequest filter)
+        {
+            try
+            {
+                var query = _productRepository.GetQueryable();
+                query = query.ApplyFilters(filter);
+                var totalItems = await query.CountAsync();                
+                var products = await query
+                    .Skip((filter.PageNumber - 1) * filter.PageSize) 
+                    .Take(filter.PageSize)
+                    .ToListAsync(); 
+                var productResponses = _productMapper.ToDtoList(products).ToList();
+
+                var pagedResponse = new PagedResponse<ProductResponse>(
+                    productResponses,
+                    totalItems,
+                    filter.PageNumber,
+                    filter.PageSize
+                );
+                return Response.Success(pagedResponse, "Products retrieved successfully");
+            }
+            catch (Exception ex)
+            {
+                return Response.Fail($"Error retrieving products: {ex.Message}", 500);
+            }
+        }
+
 
         public async Task<Response> GetAllProductsAsync()
         {
