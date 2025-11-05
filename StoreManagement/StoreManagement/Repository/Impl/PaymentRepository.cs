@@ -1,9 +1,11 @@
+
 using Microsoft.EntityFrameworkCore;
 using StoreManagement.Data;
 using StoreManagement.Models;
 
 namespace StoreManagement.Repository.Impl
 {
+
 	public class PaymentRepository : IPaymentRepository
 	{
 		private readonly StoreManagementDbContext _context;
@@ -22,7 +24,14 @@ namespace StoreManagement.Repository.Impl
 			return entity;
 		}
 
-		public async Task<bool> DeleteAsync(int id)
+        public async Task<Payment> CreatePaymentAsync(Payment payment)
+        {
+            await _dbSet.AddAsync(payment);
+            await _context.SaveChangesAsync();
+            return payment;
+        }
+
+        public async Task<bool> DeleteAsync(int id)
 		{
 			var found = await _dbSet.FindAsync(id);
 			if (found == null)
@@ -71,7 +80,11 @@ namespace StoreManagement.Repository.Impl
 			await _context.SaveChangesAsync();
 			return existing;
 		}
-	}
-}
 
+        Task<List<Payment>> IPaymentRepository.GetAllAsync()
+        {
+            return _dbSet.ToListAsync();
+        }
+    }
+}
 

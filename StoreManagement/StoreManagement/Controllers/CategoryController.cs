@@ -3,6 +3,7 @@ using StoreManagement.DTOs.Response;
 using StoreManagement.Services;
 using StoreManagement.DTOs.Request;
 using StoreManagement.Models;
+using StoreManagement.DTOs.Request.Filter;
 
 namespace StoreManagement.Controllers
 {
@@ -17,12 +18,20 @@ namespace StoreManagement.Controllers
             _categoryService = categoryService;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
+
+        [HttpGet("filter")]
+        public async Task<IActionResult> FilterCategory([FromQuery] CategoryFilterRequest request)
         {
-            var categories = await _categoryService.GetAllCategoriesAsync();
-            return Ok(categories);
+            var response = await _categoryService.FilterAsync(request);
+            return StatusCode(response.Status, response);
         }
+
+        //[HttpGet]
+        //public async Task<IActionResult> GetAll()
+        //{
+        //    var categories = await _categoryService.GetAllCategoriesAsync();
+        //    return Ok(categories);
+        //}
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
@@ -64,6 +73,14 @@ namespace StoreManagement.Controllers
                 return NotFound(new { Message = "Không tìm thấy danh mục cần xóa." });
 
             return Ok(new { Message = "Xóa danh mục thành công." });
+        }
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchByName([FromQuery] string categoryName)
+        {
+            var result = await _categoryService.SearchByNameAsync(categoryName);
+            if (!result.Any())
+                return NotFound("Không tìm thấy loại sản phẩm");
+            return Ok(result);
         }
     }
 }
