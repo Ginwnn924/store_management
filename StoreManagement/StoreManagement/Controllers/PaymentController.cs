@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using StoreManagement.Services;
+using StoreManagement.DTOs.Request.Filter;
 
 namespace StoreManagement.Controllers;
 
@@ -15,9 +16,23 @@ public class PaymentController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetPayments()
+    public async Task<IActionResult> GetPayments(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
     {
-        var response = await _paymentService.GetPaymentsAsync();
+        var filter = new PaymentFilterRequest
+        {
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+        var response = await _paymentService.GetPaymentsAsync(filter);
+        return StatusCode(response.Status, response);
+    }
+
+    [HttpGet("filter")]
+    public async Task<IActionResult> FilterPayments([FromQuery] PaymentFilterRequest request)
+    {
+        var response = await _paymentService.GetPaymentsAsync(request);
         return StatusCode(response.Status, response);
     }
 
