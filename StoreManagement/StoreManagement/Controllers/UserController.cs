@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StoreManagement.DTOs.Request;
+using StoreManagement.DTOs.Request.Filter;
 using StoreManagement.Services;
 
 namespace StoreManagement.Controllers;
@@ -17,9 +18,23 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetUsers()
+    public async Task<IActionResult> GetUsers(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
     {
-        var response = await _userService.GetUsersAsync();
+        var filter = new UserFilterRequest
+        {
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+        var response = await _userService.GetUsersAsync(filter);
+        return StatusCode(response.Status, response);
+    }
+
+    [HttpGet("filter")]
+    public async Task<IActionResult> FilterUsers([FromQuery] UserFilterRequest request)
+    {
+        var response = await _userService.GetUsersAsync(request);
         return StatusCode(response.Status, response);
     }
 
