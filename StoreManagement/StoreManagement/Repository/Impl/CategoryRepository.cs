@@ -14,6 +14,11 @@ namespace StoreManagement.Repository.Impl
             _context = context;
         }
 
+        public IQueryable<Category> GetQueryable()
+        {
+            return _context.Categories.AsQueryable();
+        }
+
         public async Task<Category> AddAsync(Category entity)
         {
             _context.Categories.Add(entity);
@@ -41,22 +46,19 @@ namespace StoreManagement.Repository.Impl
             return await _context.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.CategoryId == id);
         }
 
-        public async Task<Category?> GetByNameAsync(string categoryName)
-        {
-            return await _context.Categories.AsNoTracking()
-                .FirstOrDefaultAsync(c => c.CategoryName == categoryName);
-        }
-
-        public Task<Category> GetCategoryAsync(string CategoryName)
-        {
-            throw new NotImplementedException();
-        }
+       
 
         public async Task<Category> UpdateAsync(Category entity)
         {
             _context.Categories.Update(entity);
             await _context.SaveChangesAsync();
             return entity;
+        }
+        public async Task<IEnumerable<Category>> SearchByNameAsync(string categoryName)
+        {
+            return await _context.Categories
+                .Where(c => c.CategoryName.ToLower().Contains(categoryName.ToLower()))
+                .ToListAsync();
         }
     }
 }

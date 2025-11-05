@@ -1,9 +1,10 @@
-﻿using StoreManagement.DTOs.Response;
+﻿using StoreManagement.DTOs.Request;
+using StoreManagement.DTOs.Response;
 using StoreManagement.Models;
 
 namespace StoreManagement.Mapper
 {
-    public class OrderItemMapper : IMapper<OrderItem, OrderItemResponse>
+    public class OrderItemMapper
     {
         public void MapToExistingModel(OrderItemResponse dto, OrderItem entity)
         {
@@ -34,14 +35,26 @@ namespace StoreManagement.Mapper
             return listOrderItems;
         }
 
-        public OrderItem ToModel(OrderItemResponse dto)
+        public OrderItem ToModel(OrderItemRequest dto)
         {
-            throw new NotImplementedException();
+            return new OrderItem
+            {
+                ProductId = dto.ProductId,
+                Quantity = dto.Quantity,
+                Price = dto.Price,
+                Subtotal = dto.Price * dto.Quantity
+            };
         }
 
-        public IEnumerable<OrderItem> ToModelList(IEnumerable<OrderItemResponse> dtos)
+        public IEnumerable<OrderItem> ToModelList(IEnumerable<OrderItemRequest> dtos)
         {
-            throw new NotImplementedException();
+            List<OrderItem> orderItems = new List<OrderItem>();
+            foreach (OrderItemRequest dto in dtos) 
+            {
+                OrderItem item = ToModel(dto);
+                orderItems.Add(item);
+            }
+            return orderItems;
         }
     }
 }

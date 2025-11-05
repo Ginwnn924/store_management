@@ -1,9 +1,11 @@
+
 using Microsoft.EntityFrameworkCore;
 using StoreManagement.Data;
 using StoreManagement.Models;
 
 namespace StoreManagement.Repository.Impl
 {
+
 	public class PaymentRepository : IPaymentRepository
 	{
 		private readonly StoreManagementDbContext _context;
@@ -73,5 +75,4 @@ namespace StoreManagement.Repository.Impl
 		}
 	}
 }
-
 

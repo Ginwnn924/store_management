@@ -1,9 +1,10 @@
-﻿using StoreManagement.DTOs.Response;
+﻿using StoreManagement.DTOs.Request;
+using StoreManagement.DTOs.Response;
 using StoreManagement.Models;
 
 namespace StoreManagement.Mapper
 {
-    public class OrderMapper : IMapper<Order, OrderResponse>
+    public class OrderMapper
     {
         private readonly OrderItemMapper _orderItemMapper = new OrderItemMapper();
         public void MapToExistingModel(OrderResponse dto, Order entity)
@@ -23,8 +24,6 @@ namespace StoreManagement.Mapper
 
             response.listItem = _orderItemMapper.ToDtoList(entity.OrderItems).ToList();
 
-
-
             return response;
         }
 
@@ -41,9 +40,23 @@ namespace StoreManagement.Mapper
             return listOrders;
         }
 
-        public Order ToModel(OrderResponse dto)
+        public Order ToModel(OrderRequest dto)
         {
-            throw new NotImplementedException();
+            return new Order
+            {
+                CustomerId = dto.CustomerId,
+                UserId = dto.UserId,
+                PromoId = dto.promotionId,
+                OrderDate = dto.date,
+                TotalAmount = dto.totalAmount,
+                DiscountAmount = dto.discountAmount,
+                Status = dto.OrderStatus.ToString(),
+                OrderItems = _orderItemMapper
+                                .ToModelList(dto.listItems)
+                                .ToList()
+
+            };
+
         }
 
         public IEnumerable<Order> ToModelList(IEnumerable<OrderResponse> dtos)

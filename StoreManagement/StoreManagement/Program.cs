@@ -6,6 +6,7 @@ using StackExchange.Redis;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
 using StoreManagement.Data;
 using StoreManagement.Repository;
+using StoreManagement.socket;
 using StoreManagement.Repository.Impl;
 using StoreManagement.Services;
 using StoreManagement.Services.Impl;
@@ -15,7 +16,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
-
+builder.Services.AddSingleton<WebSocketConnectionManager>();
+builder.Services.AddSingleton<SocketService>();
+builder.Services.AddHostedService(provider => provider.GetRequiredService<SocketService>());
 
 // Ioc Service
 builder.Services.AddScoped<IOrderService, OrderService>();
@@ -33,6 +36,8 @@ builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();

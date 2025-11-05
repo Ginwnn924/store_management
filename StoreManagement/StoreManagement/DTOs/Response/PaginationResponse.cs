@@ -1,12 +1,9 @@
 ﻿namespace StoreManagement.DTOs.Response
 {
-    // Tương đương với đối tượng Page của Spring
     public class PagedResponse<T>
     {
-        // Danh sách các mục trên trang hiện tại
+     
         public List<T> Items { get; set; }
-
-        // Thông tin phân trang
         public int PageNumber { get; set; }
         public int PageSize { get; set; }
         public int TotalItems { get; set; }

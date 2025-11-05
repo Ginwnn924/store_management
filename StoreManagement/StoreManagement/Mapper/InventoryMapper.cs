@@ -23,6 +23,7 @@ namespace StoreManagement.Mapper
             {
                 InventoryId = entity.InventoryId,
                 ProductId = entity.ProductId,
+                ProductName =entity.Product?.ProductName ?? "",
                 Quantity = entity.Quantity,
                 UpdatedAt = entity.UpdatedAt
             };

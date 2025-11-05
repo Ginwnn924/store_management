@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using StoreManagement.Data;
 using StoreManagement.DTOs.Request.Filter;
+using StoreManagement.DTOs.Request;
 using StoreManagement.Services;
 using StoreManagement.Services.Impl;
 
@@ -49,4 +50,10 @@ public class OrderController : Controller
     //    return StatusCode(response.Status, response);
 
     //}
+    [HttpPost]
+    public async Task<IActionResult> CreateOrder([FromBody] OrderRequest request)
+    {
+        var response = await _orderService.CreateOrder(request);
+        return StatusCode(response.Status, response);
+    }
 }
