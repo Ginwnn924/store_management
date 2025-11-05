@@ -1,9 +1,13 @@
-﻿using StoreManagement.DTOs.Request;
+﻿using Microsoft.EntityFrameworkCore;
+using StoreManagement.DTOs.Request;
+using StoreManagement.DTOs.Request.Filter;
 using StoreManagement.DTOs.Response;
+using StoreManagement.Extensions;
 using StoreManagement.Mapper;
 using StoreManagement.Mapper;
 using StoreManagement.Models;
 using StoreManagement.Repository;
+using StoreManagement.Repository.Impl;
 
 namespace StoreManagement.Services.Impl
 {
@@ -15,7 +19,33 @@ namespace StoreManagement.Services.Impl
         {
             _repository = repository;
         }
+        public async Task<Response> GetAllInventoryAsync(InventoryFilterRequest filter)
+        {
+            var query = _repository.GetQueryable();
+            query = query.ApplyFilters(filter);
 
+            int totalRecords = await query.CountAsync();
+            var items = await query
+                .Skip((filter.PageNumber - 1) * filter.PageSize)
+                .Take(filter.PageSize)
+                .ToListAsync();
+
+            var responseItems = items.Select(i => i.ToResponse()).ToList();
+
+            var paged = new PagedResponse<InventoryResponse>(
+                responseItems,
+                totalRecords,
+                filter.PageNumber,
+                filter.PageSize
+            );
+            return new Response
+            {
+                Status = 200,
+                Message = "Lấy danh sách tồn kho thành công",
+                Data = paged
+            };
+
+        }
         public async Task<IEnumerable<InventoryResponse>> GetAllAsync()
         {
             var inventories = await _repository.GetAllAsync();
@@ -60,6 +90,13 @@ namespace StoreManagement.Services.Impl
             return await _repository.DeleteAsync(id);
         }
 
-       
+        public async Task<IEnumerable<InventoryResponse>> SearchByProductNameAsync(string productName)
+        {
+            if (string.IsNullOrWhiteSpace(productName))
+                return Enumerable.Empty<InventoryResponse>();
+
+            var results = await _repository.SearchByProductNameAsync(productName.Trim());
+            return results.Select(i => i.ToResponse());
+        }
     }
 }
