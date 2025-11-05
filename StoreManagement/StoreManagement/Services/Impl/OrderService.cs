@@ -41,9 +41,8 @@ namespace StoreManagement.Services.Impl
             var callbackUrl = _configuration["Vnpay:CallbackUrl"] ?? throw new ArgumentNullException("Vnpay:CallbackUrl");
 
             _vnpay.Initialize(tmnCode, hashSecret, baseUrl, callbackUrl);
+        }
 
-
-        private readonly OrderMapper _orderMapper = new OrderMapper();
 
         public OrderService(IOrderRepository orderRepository, IPaymentRepository paymentRepository)
         {
@@ -95,7 +94,7 @@ namespace StoreManagement.Services.Impl
         public async Task<Response> CreateOrder(OrderRequest request)
         {
 
-            if (request.PaymentMethod == Enum.PaymentMethod.cash) 
+            if (request.PaymentMethod == Enum.PaymentMethod.cash)
             {
                 request.OrderStatus = Enum.OrderStatus.paid;
                 Order newOrder = _orderMapper.ToModel(request);
@@ -129,6 +128,7 @@ namespace StoreManagement.Services.Impl
             return createdOrder.OrderId;
         }
 
+
         public async Task<(long OrderId, string PaymentUrl)> CreateOnlyOrder(OrderRequest request, string ipAddress)
         {
             // Map the order request to the Order model
@@ -159,9 +159,8 @@ namespace StoreManagement.Services.Impl
 
             return (createdOrder.OrderId, paymentUrl);
         }
-                _paymentRepository.CreatePaymentAsync(payment);
-            }
-            return Response.Success("Order created successfully");
-        }
+
+
+
     }
 }

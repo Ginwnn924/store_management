@@ -18,7 +18,6 @@ namespace StoreManagement.Repository.Impl
             _dbSet = context.Set<Order>();
         }
 
-        public async Task<Order> AddAsync(Order entity)
         public IQueryable<Order> GetQueryable()
         {
             return _context.Orders
@@ -29,8 +28,7 @@ namespace StoreManagement.Repository.Impl
                 .AsQueryable();
         }
 
-        public Task<Order> AddAsync(Order entity)
-
+        public async Task<Order> AddAsync(Order entity)
         {
             var entry = await _dbSet.AddAsync(entity);
             await _context.SaveChangesAsync();

@@ -6,6 +6,9 @@ using StoreManagement.DTOs.Request.Filter;
 using StoreManagement.DTOs.Request;
 using StoreManagement.Services;
 using StoreManagement.Services.Impl;
+using VNPAY.NET;
+using VNPAY.NET.Utilities;
+using StoreManagement.DTOs.Response;
 
 namespace StoreManagement.Controllers;
 
@@ -75,12 +78,6 @@ public class OrderController : Controller
         return StatusCode(response.Status, response);
     }
 
-    [HttpPost]
-    public async Task<IActionResult> CreateOrder([FromBody] OrderRequest request)
-    {
-        var response = await _orderService.CreateOrder(request);
-        return StatusCode(response.Status, response);
-    }
     
     [HttpPost("/api/Order/vnpay")]
     public async Task<IActionResult> CreateVnpayOrder([FromBody] OrderRequest orderRequest)
