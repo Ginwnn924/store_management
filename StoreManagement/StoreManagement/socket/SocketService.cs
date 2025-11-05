@@ -1,17 +1,22 @@
 ﻿using Fleck;
+using StoreManagement.Services;
+using StoreManagement.Services.Impl;
 using System.Drawing;
 using System.IO;
+using System.Text.Json;
 
 namespace StoreManagement.socket
 {
     public class SocketService : IHostedService
     {
         private WebSocketServer _server;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly WebSocketConnectionManager _manager;
 
-        public SocketService(WebSocketConnectionManager manager)
+        public SocketService(WebSocketConnectionManager manager, IServiceScopeFactory serviceScopeFactory)
         {
             _manager = manager;
+            _serviceScopeFactory = serviceScopeFactory;
         }
         public Task StartAsync(CancellationToken cancellationToken)
         {
@@ -37,7 +42,23 @@ namespace StoreManagement.socket
 
                 socket.OnMessage = async message =>
                 {
-                    _manager.BroadcastToRoom(roomId, message, socket);
+                    Console.WriteLine(message);
+                    using var scope = _serviceScopeFactory.CreateScope();
+                    var productService = scope.ServiceProvider.GetRequiredService<IProductService>();
+
+                    // Gọi service
+                    var response = await productService.GetProductByBarcodeAsync(message);
+
+                    // Thêm options để giữ nguyên tiếng Việt
+                    var options = new JsonSerializerOptions
+                    {
+                        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                        WriteIndented = true // Optional: format đẹp hơn
+                    };
+
+                    string jsonString = JsonSerializer.Serialize(response.Data, options);
+
+                    await _manager.BroadcastToRoom(roomId, jsonString, socket);
                     //await _manager.BroadcastAsync($"Server: {message}");
                 };
             });
