@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using StoreManagement.DTOs.Request;
+using StoreManagement.DTOs.Request.Filter;
 using StoreManagement.DTOs.Response;
 using StoreManagement.Services;
 
@@ -16,13 +17,18 @@ namespace StoreManagement.Controllers
             _inventoryService = inventoryService;
         }
 
-     
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
+        [HttpGet("filter")]
+        public async Task<IActionResult> FilterInventories([FromQuery] InventoryFilterRequest request)
         {
-            var result = await _inventoryService.GetAllAsync();
-            return Ok(result);
+            var response = await _inventoryService.GetAllInventoryAsync(request);
+            return StatusCode(response.Status, response);
         }
+        //[HttpGet]
+        //public async Task<IActionResult> GetAll()
+        //{
+        //    var result = await _inventoryService.GetAllAsync();
+        //    return Ok(result);
+        //}
         [HttpPost]
         public async Task<IActionResult> Create ([FromBody] InventoryRequest request)
         {
@@ -57,6 +63,14 @@ namespace StoreManagement.Controllers
                 return NotFound(new { message = "Không tìm thấy tồn kho để xóa" });
 
             return Ok(new { message = "Xóa tồn kho thành công" });
+        }
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchByProductName([FromQuery] string productName)
+        {
+            var result = await _inventoryService.SearchByProductNameAsync(productName);
+            if (!result.Any())
+                return NotFound("Không tìm thấy sản phẩm nào phù hợp.");
+            return Ok(result);
         }
     }
 }

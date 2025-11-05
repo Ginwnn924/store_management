@@ -4,6 +4,7 @@ namespace StoreManagement.Repository
 {
     public interface ICategoryRepository : IRepository<int, Category>
     {
-        Task<Category> GetCategoryAsync(String CategoryName);
+        Task<IEnumerable<Category>> SearchByNameAsync(string categoryName);
+        IQueryable<Category> GetQueryable();
     }
 }
