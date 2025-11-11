@@ -23,12 +23,19 @@ namespace StoreManagement.Controllers
             var response = await _inventoryService.GetAllInventoryAsync(request);
             return StatusCode(response.Status, response);
         }
-        //[HttpGet]
-        //public async Task<IActionResult> GetAll()
-        //{
-        //    var result = await _inventoryService.GetAllAsync();
-        //    return Ok(result);
-        //}
+        [HttpGet]
+        public async Task<IActionResult> GetAll(
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            var filter = new InventoryFilterRequest
+            {
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
+            var result = await _inventoryService.GetAllInventoryAsync(filter);
+            return Ok(result);
+        }
         [HttpPost]
         public async Task<IActionResult> Create ([FromBody] InventoryRequest request)
         {

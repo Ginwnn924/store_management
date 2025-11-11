@@ -4,6 +4,8 @@ namespace StoreManagement.DTOs
 {
     public class SupplierDto
     {
+        public int SupplierId { get; set; }
+
         [Required]
         [MaxLength(100)]
         public string Name { get; set; } = string.Empty;

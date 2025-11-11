@@ -34,6 +34,7 @@ namespace StoreManagement.Services.Impl
                 .Take(filter.PageSize)
                 .Select(s => new SupplierDto
                 {
+                    SupplierId = s.SupplierId,
                     Name = s.Name,
                     Phone = s.Phone,
                     Email = s.Email,

@@ -26,12 +26,19 @@ namespace StoreManagement.Controllers
             return StatusCode(response.Status, response);
         }
 
-        //[HttpGet]
-        //public async Task<IActionResult> GetAll()
-        //{
-        //    var categories = await _categoryService.GetAllCategoriesAsync();
-        //    return Ok(categories);
-        //}
+        [HttpGet]
+        public async Task<IActionResult> GetAll(
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            var filter = new CategoryFilterRequest()
+            {
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
+            var categories = await _categoryService.FilterAsync(filter);
+            return Ok(categories);
+        }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
