@@ -143,7 +143,7 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 
-    c.CustomSchemaIds(t => t.Name);
+    c.CustomSchemaIds(t => t.FullName);
     c.CustomOperationIds(apiDescription =>
     {
         var action = apiDescription.ActionDescriptor.RouteValues["action"];

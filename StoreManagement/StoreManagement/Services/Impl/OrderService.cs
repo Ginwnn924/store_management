@@ -93,7 +93,7 @@ namespace StoreManagement.Services.Impl
                     PaymentMethod = PaymentMethod.cash.ToString(),
                 };
                 // Ensure we await the repository call to keep the DbContext alive within the request scope
-                await _paymentRepository.CreatePaymentAsync(payment);
+                await _paymentRepository.AddAsync(payment);
             }
         }
 
