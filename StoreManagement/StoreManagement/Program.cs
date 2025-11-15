@@ -12,6 +12,7 @@ using StoreManagement.Services;
 using StoreManagement.Services.Impl;
 using System.Text;
 using VNPAY.NET;
+using StoreManagement;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -140,6 +141,15 @@ builder.Services.AddSwaggerGen(c =>
             },
             Array.Empty<string>()
         }
+    });
+
+    c.CustomSchemaIds(t => t.Name);
+    c.CustomOperationIds(apiDescription =>
+    {
+        var action = apiDescription.ActionDescriptor.RouteValues["action"];
+        var model = apiDescription.ActionDescriptor.RouteValues["controller"];
+
+        return $"{action}{model}";
     });
 });
 
