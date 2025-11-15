@@ -151,8 +151,8 @@ public class OrderController : Controller
 
             var serviceResponse = await _paymentService.ProcessVnpayCallbackAsync(paymentResult, vnpAmountStr);
 
-            var status = serviceResponse.Status == 200 ? "success" : "fail";
-            var orderId = serviceResponse.Data;
+            var status = serviceResponse is null ? "success" : "fail";
+            var orderId = serviceResponse.OrderId;
             Console.WriteLine($" status: {status} order {orderId}");
             var redirect = $"{_returnFontEndUrl}?status={status}&orderId={orderId}";
 
