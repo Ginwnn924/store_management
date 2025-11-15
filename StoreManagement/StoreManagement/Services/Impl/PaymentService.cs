@@ -1,10 +1,13 @@
-using StoreManagement.DTOs;
+using Microsoft.EntityFrameworkCore;
 using StoreManagement.DTOs.Request.Filter;
-using StoreManagement.DTOs.Response;
 using StoreManagement.Extensions;
+using StoreManagement.Mapper;
 using StoreManagement.Models;
 using StoreManagement.Repository;
+using StoreManagement.Exceptions;
 using VNPAY.NET.Models;
+using PaymentResponse = StoreManagement.DTOs.Response.PaymentResponse;
+using StoreManagement.DTOs.Response;
 
 namespace StoreManagement.Services.Impl
 {
@@ -12,6 +15,7 @@ namespace StoreManagement.Services.Impl
     {
         private readonly IOrderRepository _orderRepository;
         private readonly IPaymentRepository _paymentRepository;
+        private readonly PaymentMapper _paymentMapper = new PaymentMapper();
 
         public PaymentService(IPaymentRepository paymentRepository, IOrderRepository orderRepository)
         {
@@ -19,94 +23,65 @@ namespace StoreManagement.Services.Impl
             _orderRepository = orderRepository;
         }
 
-        public async Task<Response> GetPaymentsAsync()
+        public async Task<IEnumerable<PaymentResponse>> GetAllPaymentsAsync()
         {
             var payments = await _paymentRepository.GetAllAsync();
-            var paymentDtos = payments
-                .Select(p => new PaymentDto
-                {
-                    PaymentId = p.PaymentId,
-                    OrderId = p.OrderId,
-                    Amount = p.Amount,
-                    PaymentMethod = p.PaymentMethod,
-                    PaymentDate = p.PaymentDate
-                })
-                .ToList();
-
-            return Response.Success(paymentDtos);
+            return _paymentMapper.ToDtoList(payments);
         }
 
-        public async Task<Response> GetPaymentsAsync(PaymentFilterRequest filter)
+        public async Task<PagedResponse<PaymentResponse>> GetAllPaymentsAsync(PaymentFilterRequest filter)
         {
-            //var query = _dbContext.Payments.AsNoTracking().AsQueryable();
-            //query = query.ApplyFilters(filter);
+            var query = _paymentRepository.GetQueryable();
+            query = query.ApplyFilters(filter);
+            var totalItems = await query.CountAsync();
+            var payments = await query
+                .OrderByDescending(p => p.PaymentDate)
+                .Skip((filter.PageNumber - 1) * filter.PageSize)
+                .Take(filter.PageSize)
+                .ToListAsync();
+            var paymentResponses = _paymentMapper.ToDtoList(payments).ToList();
 
-            //var totalItems = await query.CountAsync();
-            //var items = await query
-            //    .OrderByDescending(p => p.PaymentDate)
-            //    .Skip((filter.PageNumber - 1) * filter.PageSize)
-            //    .Take(filter.PageSize)
-            //    .Select(p => new PaymentDto
-            //    {
-            //        PaymentId = p.PaymentId,
-            //        OrderId = p.OrderId,
-            //        Amount = p.Amount,
-            //        PaymentMethod = p.PaymentMethod,
-            //        PaymentDate = p.PaymentDate
-            //    })
-            //    .ToListAsync();
-
-            //var paged = new PagedResponse<PaymentDto>(items, totalItems, filter.PageNumber, filter.PageSize);
-            return Response.Success(null);
+            var pagedResponse = new PagedResponse<PaymentResponse>(
+                paymentResponses,
+                totalItems,
+                filter.PageNumber,
+                filter.PageSize
+            );
+            return pagedResponse;
         }
 
-        public async Task<Response> GetPaymentByIdAsync(int id)
+        public async Task<PaymentResponse> GetPaymentByIdAsync(int id)
         {
-            var p = await _paymentRepository.GetByIdAsync(id);
-            if (p == null)
-            {
-                return Response.Fail("Không tìm thấy thanh toán", 404);
-            }
-            var dto = new PaymentDto
-            {
-                PaymentId = p.PaymentId,
-                OrderId = p.OrderId,
-                Amount = p.Amount,
-                PaymentMethod = p.PaymentMethod,
-                PaymentDate = p.PaymentDate
-            };
-            return Response.Success(dto);
+            var payment = await _paymentRepository.GetByIdAsync(id);
+            return _paymentMapper.ToDto(payment);
         }
 
-        public async Task<Response> AddAsync(Payment payment)
+        public async Task<PaymentResponse> AddAsync(Payment payment)
         {
-            try
-            {
-                var newStatus = Enum.OrderStatus.paid.ToString();
-                await _orderRepository.UpdateStatusAsync(payment.OrderId, newStatus);
+            // Update order status to paid
+            var newStatus = Enum.OrderStatus.paid.ToString();
+            await _orderRepository.UpdateStatusAsync(payment.OrderId, newStatus);
 
-                await _paymentRepository.CreatePaymentAsync(payment);
-                // Return order id in Data to support redirect building
-                return Response.Success(payment.OrderId);
-            }
-            catch (Exception ex)
-            {
-                return Response.Fail($"An error occurred while processing the payment: {ex.Message}", 500);
-            }
+            // Create payment
+            var createdPayment = await _paymentRepository.AddAsync(payment);
+            var response = await _paymentRepository.GetByIdAsync(createdPayment.PaymentId);
+            var paymentResponse = _paymentMapper.ToDto(response);
+            return paymentResponse;
         }
 
-        public async Task<Response> ProcessVnpayCallbackAsync(PaymentResult paymentResult, string? vnpAmountStr)
+        public async Task<PaymentResponse> ProcessVnpayCallbackAsync(PaymentResult paymentResult, string? vnpAmountStr)
         {
             if (string.IsNullOrWhiteSpace(vnpAmountStr) || !long.TryParse(vnpAmountStr, out var vnpAmountLong))
             {
-                return Response.Fail("Invalid payment amount.", 400);
+                throw new InvalidException("Invalid VNPAY amount.");
             }
 
             var amount = (decimal)vnpAmountLong / 100m;
 
             if (!paymentResult.IsSuccess)
             {
-                return Response.Fail($"{paymentResult.PaymentResponse.Description}. {paymentResult.TransactionStatus.Description}.", 400);
+                var message = $"{paymentResult.PaymentResponse.Description}. {paymentResult.TransactionStatus.Description}.";
+                throw new PaymentFailedException(message);
             }
 
             var orderId = paymentResult.PaymentId;
@@ -121,8 +96,8 @@ namespace StoreManagement.Services.Impl
                 PaymentDate = paymentResult.Timestamp,
                 PaymentMethod = paymentMethod
             };
-            await AddAsync(payment);
-            return Response.Success(payment.OrderId);
+
+            return await AddAsync(payment);
         }
     }
 }
