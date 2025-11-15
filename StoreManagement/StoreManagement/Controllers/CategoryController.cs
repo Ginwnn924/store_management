@@ -22,7 +22,7 @@ namespace StoreManagement.Controllers
 
         [HttpGet("filter")]
         [ProducesDefaultResponseType(typeof(Response<PagedResponse<CategoryResponse>>))]
-        public async Task<IActionResult> Filter([FromQuery] CategoryFilterRequest request)
+        public async Task<IActionResult> FilterCategories([FromQuery] CategoryFilterRequest request)
         {
             try
             {
@@ -39,7 +39,7 @@ namespace StoreManagement.Controllers
 
         [HttpGet]
         [ProducesDefaultResponseType(typeof(Response<PagedResponse<CategoryResponse>>))]
-        public async Task<IActionResult> GetAll(
+        public async Task<IActionResult> GetAllCategories(
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 10)
         {
@@ -66,7 +66,7 @@ namespace StoreManagement.Controllers
 
         [HttpGet("{id}")]
         [ProducesDefaultResponseType(typeof(Response<CategoryResponse>))]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetCategoryById(int id)
         {
             try
             {
@@ -87,7 +87,7 @@ namespace StoreManagement.Controllers
 
         [HttpPost]
         [ProducesDefaultResponseType(typeof(Response<CategoryResponse>))]
-        public async Task<IActionResult> Create([FromBody] CategoryRequest request)
+        public async Task<IActionResult> CreateCategory([FromBody] CategoryRequest request)
         {
             try
             {
@@ -97,7 +97,7 @@ namespace StoreManagement.Controllers
                 var category = await _categoryService.AddCategoryAsync(request.CategoryName);
                 var response = new Response<CategoryResponse>("Thêm thành công", category);
 
-                return CreatedAtAction(nameof(GetById), new { id = category.CategoryId }, response);
+                return CreatedAtAction(nameof(GetCategoryById), new { id = category.CategoryId }, response);
             }
             catch (Exception ex)
             {
@@ -107,7 +107,7 @@ namespace StoreManagement.Controllers
 
         [HttpPut("{id}")]
         [ProducesDefaultResponseType(typeof(Response<CategoryResponse>))]
-        public async Task<IActionResult> Update(int id, [FromBody] CategoryRequest request)
+        public async Task<IActionResult> UpdateCategory(int id, [FromBody] CategoryRequest request)
         {
             try
             {
@@ -126,7 +126,7 @@ namespace StoreManagement.Controllers
 
         [HttpDelete("{id}")]
         [ProducesDefaultResponseType(typeof(Response<object>))]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeleteCategory(int id)
         {
             try
             {
@@ -144,7 +144,7 @@ namespace StoreManagement.Controllers
         }
 
         [HttpGet("search")]
-        public async Task<IActionResult> SearchByName([FromQuery] string categoryName)
+        public async Task<IActionResult> SearchByCategoryName([FromQuery] string categoryName)
         {
             var result = await _categoryService.SearchByNameAsync(categoryName);
             if (!result.Any())

@@ -33,7 +33,10 @@ public class UsersController : ControllerBase
                 PageNumber = pageNumber,
                 PageSize = pageSize
             };
-            var response = await _userService.GetUsersAsync(filter);
+
+            var result = await _userService.GetUsersAsync(filter);
+            var response = new Response<PagedResponse<UserResponse>>("Get users successfully", result);
+
             return Ok(response);
         }
         catch (Exception ex)
@@ -48,7 +51,9 @@ public class UsersController : ControllerBase
     {
         try
         {
-            var response = await _userService.GetUsersAsync(filter);
+            var result = await _userService.GetUsersAsync(filter);
+            var response = new Response<PagedResponse<UserResponse>>("Get users successfully", result);
+
             return Ok(response);
         }
         catch (Exception ex)
@@ -63,12 +68,14 @@ public class UsersController : ControllerBase
     {
         try
         {
-            var response = await _userService.GetUserByIdAsync(id);
+            var result = await _userService.GetUserByIdAsync(id);
+            var response = new Response<UserResponse>("Get user successfully", result);
+
             return Ok(response);
         }
         catch (NotFoundException ex)
         {
-            return NotFound(ex.Message);
+            return NotFound(SM.Response.OnlyMessage(ex.Message));
         }
         catch (Exception ex)
         {
@@ -82,12 +89,14 @@ public class UsersController : ControllerBase
     {
         try
         {
-            var response = await _userService.CreateUserAsync(request);
+            var result = await _userService.CreateUserAsync(request);
+            var response = new Response<UserResponse>("Create successfully", result);
+
             return Ok(response);
         }
         catch (ConflictExeption ex)
         {
-            return Conflict(ex.Message);
+            return Conflict(SM.Response.OnlyMessage(ex.Message));
         }
         catch (Exception ex)
         {
@@ -101,16 +110,18 @@ public class UsersController : ControllerBase
     {
         try
         {
-            var response = await _userService.UpdateUserAsync(id, request);
+            var result = await _userService.UpdateUserAsync(id, request);
+            var response = new Response<UserResponse>("Update successfully", result);
+            
             return Ok(response);
         }
         catch (NotFoundException ex)
         {
-            return NotFound(ex.Message);
+            return NotFound(SM.Response.OnlyMessage(ex.Message));
         }
         catch (ConflictExeption ex)
         {
-            return Conflict(ex.Message);
+            return Conflict(SM.Response.OnlyMessage(ex.Message));
         }
         catch (Exception ex)
         {
@@ -124,12 +135,11 @@ public class UsersController : ControllerBase
     {
         try
         {
-            var response = await _userService.DeleteUserAsync(id);
-            return Ok(response);
-        }
-        catch (NotFoundException ex)
-        {
-            return NotFound(ex.Message);
+            var result = await _userService.DeleteUserAsync(id);
+            if (!result)
+                return NotFound(SM.Response.OnlyMessage($"User with Id {id} not exist"));
+
+            return Ok(SM.Response.OnlyMessage("Delete successfully"));
         }
         catch (Exception ex)
         {
@@ -137,4 +147,3 @@ public class UsersController : ControllerBase
         }
     }
 }
-

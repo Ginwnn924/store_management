@@ -33,7 +33,10 @@ public class PaymentController : ControllerBase
                 PageNumber = pageNumber,
                 PageSize = pageSize
             };
-            var response = await _paymentService.GetAllPaymentsAsync(filter);
+
+            var result = await _paymentService.GetAllPaymentsAsync(filter);
+            var response = new Response<PagedResponse<PaymentResponse>>("Get payments successfully", result);
+
             return Ok(response);
         }
         catch (Exception ex)
@@ -49,7 +52,9 @@ public class PaymentController : ControllerBase
     {
         try
         {
-            var response = await _paymentService.GetAllPaymentsAsync(filter);
+            var result = await _paymentService.GetAllPaymentsAsync(filter);
+            var response = new Response<PagedResponse<PaymentResponse>>("Get payments successfully", result);
+
             return Ok(response);
         }
         catch (Exception ex)
@@ -64,12 +69,14 @@ public class PaymentController : ControllerBase
     {
         try
         {
-            var response = await _paymentService.GetPaymentByIdAsync(id);
+            var result = await _paymentService.GetPaymentByIdAsync(id);
+            var response = new Response<PaymentResponse>("Get payment successfully", result);
+
             return Ok(response);
         }
         catch (NotFoundException ex)
         {
-            return NotFound(ex.Message);
+            return NotFound(SM.Response.OnlyMessage(ex.Message));
         }
         catch (Exception ex)
         {
@@ -77,5 +84,3 @@ public class PaymentController : ControllerBase
         }
     }
 }
-
-

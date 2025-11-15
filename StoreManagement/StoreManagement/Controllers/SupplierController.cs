@@ -33,7 +33,9 @@ public class SupplierController : ControllerBase
                 PageNumber = pageNumber,
                 PageSize = pageSize
             };
-            var response = await _supplierService.GetALlSuppliersAsync(filter);
+            var result = await _supplierService.GetALlSuppliersAsync(filter);
+            var response = new Response<PagedResponse<SupplierResponse>>("Get suppliers successfully", result);
+
             return Ok(response);
         }
         catch (Exception ex)
@@ -48,7 +50,9 @@ public class SupplierController : ControllerBase
     {
         try
         {
-            var response = await _supplierService.GetALlSuppliersAsync(filter);
+            var result = await _supplierService.GetALlSuppliersAsync(filter);
+            var response = new Response<PagedResponse<SupplierResponse>>("Get suppliers successfully", result);
+
             return Ok(response);
         }
         catch (Exception ex)
@@ -63,12 +67,14 @@ public class SupplierController : ControllerBase
     {
         try
         {
-            var response = await _supplierService.GetSupplierByIdAsync(id);
+            var result = await _supplierService.GetSupplierByIdAsync(id);
+            var response = new Response<SupplierResponse>("Get supplier successfully", result);
+
             return Ok(response);
         }
         catch (NotFoundException ex)
         {
-            return NotFound(ex.Message);
+            return NotFound(SM.Response.OnlyMessage(ex.Message));
         }
         catch (Exception ex)
         {
@@ -82,12 +88,14 @@ public class SupplierController : ControllerBase
     {
         try
         {
-            var response = await _supplierService.CreateSupplierAsync(supplierDto);
+            var result = await _supplierService.CreateSupplierAsync(supplierDto);
+            var response = new Response<SupplierResponse>("Create supplier successfully", result);
+
             return Ok(response);
         }
         catch (ConflictExeption ex)
         {
-            return Conflict(ex.Message);
+            return Conflict(SM.Response.OnlyMessage(ex.Message));
         }
         catch (Exception ex)
         {
@@ -101,16 +109,18 @@ public class SupplierController : ControllerBase
     {
         try
         {
-            var response = await _supplierService.UpdateSupplierAsync(id, supplierDto);
+            var result = await _supplierService.UpdateSupplierAsync(id, supplierDto);
+            var response = new Response<SupplierResponse>("Update supplier successfully", result);
+
             return Ok(response);
         }
         catch (NotFoundException ex)
         {
-            return NotFound(ex.Message);
+            return NotFound(SM.Response.OnlyMessage(ex.Message));
         }
         catch (ConflictExeption ex)
         {
-            return Conflict(ex.Message);
+            return Conflict(SM.Response.OnlyMessage(ex.Message));
         }
         catch (Exception ex)
         {
@@ -124,12 +134,11 @@ public class SupplierController : ControllerBase
     {
         try
         {
-            var response = await _supplierService.DeleteSupplierAsync(id);
-            return Ok(response);
-        }
-        catch (NotFoundException ex)
-        {
-            return NotFound(ex.Message);
+            var result = await _supplierService.DeleteSupplierAsync(id);
+            if (!result)
+                return NotFound($"Supplier with Id {id} not exist");
+
+            return Ok(SM.Response.OnlyMessage("Delete supplier successfully"));
         }
         catch (Exception ex)
         {

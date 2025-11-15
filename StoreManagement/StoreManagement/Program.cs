@@ -147,9 +147,7 @@ builder.Services.AddSwaggerGen(c =>
     c.CustomOperationIds(apiDescription =>
     {
         var action = apiDescription.ActionDescriptor.RouteValues["action"];
-        var model = apiDescription.ActionDescriptor.RouteValues["controller"];
-
-        return $"{action}{model}";
+        return action;
     });
 });
 

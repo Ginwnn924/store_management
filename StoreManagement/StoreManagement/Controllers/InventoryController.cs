@@ -39,7 +39,7 @@ namespace StoreManagement.Controllers
 
         [HttpGet]
         [ProducesDefaultResponseType(typeof(Response<PagedResponse<InventoryResponse>>))]
-        public async Task<IActionResult> GetAll(
+        public async Task<IActionResult> GetAllInventories(
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 10)
         {
@@ -64,7 +64,7 @@ namespace StoreManagement.Controllers
 
         [HttpPost]
         [ProducesDefaultResponseType(typeof(Response<InventoryResponse>))]
-        public async Task<IActionResult> Create([FromBody] InventoryRequest request)
+        public async Task<IActionResult> CreateInventory([FromBody] InventoryRequest request)
         {
             try
             {
@@ -81,7 +81,7 @@ namespace StoreManagement.Controllers
 
         [HttpGet("{id}")]
         [ProducesDefaultResponseType(typeof(Response<InventoryResponse>))]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetInventoryById(int id)
         {
             try
             {
@@ -100,7 +100,7 @@ namespace StoreManagement.Controllers
 
         [HttpPut("{id}")]
         [ProducesDefaultResponseType(typeof(Response<InventoryResponse>))]
-        public async Task<IActionResult> Update(int id, [FromBody] InventoryRequest request)
+        public async Task<IActionResult> UpdateInventory(int id, [FromBody] InventoryRequest request)
         {
             try
             {
@@ -119,7 +119,7 @@ namespace StoreManagement.Controllers
 
         [HttpDelete("{id}")]
         [ProducesDefaultResponseType(typeof(Response<object>))]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeleteInventory(int id)
         {
             try
             {
@@ -137,7 +137,7 @@ namespace StoreManagement.Controllers
 
         [HttpGet("search")]
         [ProducesDefaultResponseType(typeof(Response<IEnumerable<InventoryResponse>>))]
-        public async Task<IActionResult> SearchByProductName([FromQuery] string productName)
+        public async Task<IActionResult> SearchInventoryByProductName([FromQuery] string productName)
         {
             var result = await _inventoryService.SearchByProductNameAsync(productName);
             if (!result.Any())

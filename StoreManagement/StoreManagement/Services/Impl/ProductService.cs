@@ -21,29 +21,29 @@ namespace StoreManagement.Services.Impl
 
         public async Task<PagedResponse<ProductResponse>> GetAllProductsAsync(ProductFilterRequest filter)
         {
-            
-                var query = _productRepository.GetQueryable();
-                query = query.ApplyFilters(filter);
-                var totalItems = await query.CountAsync();                
-                var products = await query
-                    .Skip((filter.PageNumber - 1) * filter.PageSize) 
-                    .Take(filter.PageSize)
-                    .ToListAsync(); 
-                var productResponses = _productMapper.ToDtoList(products).ToList();
 
-                var pagedResponse = new PagedResponse<ProductResponse>(
-                    productResponses,
-                    totalItems,
-                    filter.PageNumber,
-                    filter.PageSize
-                );
+            var query = _productRepository.GetQueryable();
+            query = query.ApplyFilters(filter);
+            var totalItems = await query.CountAsync();
+            var products = await query
+                .Skip((filter.PageNumber - 1) * filter.PageSize)
+                .Take(filter.PageSize)
+                .ToListAsync();
+            var productResponses = _productMapper.ToDtoList(products).ToList();
+
+            var pagedResponse = new PagedResponse<ProductResponse>(
+                productResponses,
+                totalItems,
+                filter.PageNumber,
+                filter.PageSize
+            );
             return pagedResponse;
         }
 
 
         public async Task<IEnumerable<ProductResponse>> GetAllProductsAsync()
         {
-            
+
             var products = await _productRepository.GetAllAsync();
             var productResponses = _productMapper.ToDtoList(products);
             return productResponses;
@@ -57,61 +57,54 @@ namespace StoreManagement.Services.Impl
 
         public async Task<ProductResponse> CreateProductAsync(ProductCreateRequest request)
         {
-            
-                // Check if barcode already exists
-                if (!string.IsNullOrEmpty(request.Barcode))
-                {
-                    var existingProduct = await _productRepository.GetProductByBarcodeAsync(request.Barcode);
-                    throw new ConflictExeption("Đã tồn tại barcode này .");
-                }
 
-                var product = _productMapper.ToModel(request);
-                var createdProduct = await _productRepository.AddAsync(product);
-                var response = await _productRepository.GetByIdAsync(createdProduct.ProductId);
-                var productResponse = _productMapper.ToDto(response);
-                return productResponse;
+            // Check if barcode already exists
+            if (!string.IsNullOrEmpty(request.Barcode))
+            {
+                var existingProduct = await _productRepository.GetProductByBarcodeAsync(request.Barcode);
+                if (existingProduct is not null) throw new ConflictExeption("Đã tồn tại barcode này .");
+            }
+
+            var product = _productMapper.ToModel(request);
+            var createdProduct = await _productRepository.AddAsync(product);
+            var response = await _productRepository.GetByIdAsync(createdProduct.ProductId);
+            var productResponse = _productMapper.ToDto(response);
+            return productResponse;
         }
 
-        public async Task<ProductResponse> UpdateProductAsync(ProductUpdateRequest request,int id )
+        public async Task<ProductResponse> UpdateProductAsync(ProductUpdateRequest request, int id)
         {
-           
-                // Check if barcode already exists for a different product
-                if (!string.IsNullOrEmpty(request.Barcode))
-                {
-                    var existingProduct = await _productRepository.GetProductByBarcodeAsync(request.Barcode);
-                    throw new ConflictExeption("Đã tồn tại barcode này .");
-                }
 
-                var product = _productMapper.ToModel(request,id);
-                if (product == null)
-                {
-                    throw new NotFoundException("Không tìm thấy sản phẩm để cập nhật.");
-                }
-                var updatedProduct = await _productRepository.UpdateAsync(product);
-                var response = await _productRepository.GetByIdAsync(updatedProduct.ProductId);
-                var productResponse = _productMapper.ToDto(response);
+            // Check if barcode already exists for a different product
+            if (!string.IsNullOrEmpty(request.Barcode))
+            {
+                var existingProduct = await _productRepository.GetProductByBarcodeAsync(request.Barcode);
+                if (existingProduct is not null) throw new ConflictExeption("Đã tồn tại barcode này .");
+            }
+
+            var product = _productMapper.ToModel(request, id) 
+                ?? throw new NotFoundException("Không tìm thấy sản phẩm để cập nhật.");
+            
+            var updatedProduct = await _productRepository.UpdateAsync(product);
+            var response = await _productRepository.GetByIdAsync(updatedProduct.ProductId);
+            var productResponse = _productMapper.ToDto(response);
 
             return productResponse;
-         
         }
 
-        public async Task<bool> DeleteProductAsync(int id) { 
-                return await _productRepository.DeleteAsync(id);
+        public async Task<bool> DeleteProductAsync(int id)
+        {
+            return await _productRepository.DeleteAsync(id);
         }
 
-        
-
-        
         public async Task<ProductResponse> GetProductByBarcodeAsync(string barcode)
         {
-                var product = await _productRepository.GetProductByBarcodeAsync(barcode);
-                if(product == null)
-                {
-                    throw new NotFoundException("Không tìm thấy sản phẩm với mã vạch đã cho.");
+            var product = await _productRepository.GetProductByBarcodeAsync(barcode);
+            if (product == null)
+            {
+                throw new NotFoundException("Không tìm thấy sản phẩm với mã vạch đã cho.");
             }
             return _productMapper.ToDto(product);
         }
-
-        
     }
 }

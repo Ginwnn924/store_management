@@ -29,13 +29,16 @@ namespace StoreManagement.Controllers
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 10)
         {
-            try { 
+            try
+            {
                 var filter = new ProductFilterRequest
                 {
                     PageNumber = pageNumber,
                     PageSize = pageSize
                 };
-                var response = await _productService.GetAllProductsAsync(filter);
+                var result = await _productService.GetAllProductsAsync(filter);
+                var response = new Response<PagedResponse<ProductResponse>>("Get products successfully", result);
+
                 return Ok(response);
             }
             catch (Exception ex)
@@ -50,7 +53,9 @@ namespace StoreManagement.Controllers
         {
             try
             {
-                var response = await _productService.GetAllProductsAsync(filter);
+                var result = await _productService.GetAllProductsAsync(filter);
+                var response = new Response<PagedResponse<ProductResponse>>("Get products successfully", result);
+                
                 return Ok(response);
             }
             catch (Exception ex)
@@ -65,12 +70,14 @@ namespace StoreManagement.Controllers
         {
             try
             {
-                var response = await _productService.GetProductByIdAsync(id);
+                var result = await _productService.GetProductByIdAsync(id);
+                var response = new Response<ProductResponse>("Get product successfully", result);
+                
                 return Ok(response);
             }
             catch (NotFoundException ex)
             {
-                return NotFound(ex.Message);
+                return NotFound(SM.Response.OnlyMessage(ex.Message));
             }
             catch (Exception ex)
             {
@@ -84,12 +91,14 @@ namespace StoreManagement.Controllers
         {
             try
             {
-                var response = await _productService.CreateProductAsync(request);
+                var result = await _productService.CreateProductAsync(request);
+                var response = new Response<ProductResponse>("Create successfully", result);
+
                 return Ok(response);
             }
             catch (ConflictExeption ex)
             {
-                return Conflict(ex.Message);
+                return Conflict(SM.Response.OnlyMessage(ex.Message));
             }
             catch (Exception ex)
             {
@@ -103,22 +112,24 @@ namespace StoreManagement.Controllers
         {
             try
             {
-                var response = await _productService.UpdateProductAsync(request, id);
+                var result = await _productService.UpdateProductAsync(request, id);
+                var response = new Response<ProductResponse>("Update successfully", result);
+
                 return Ok(response);
             }
             catch (NotFoundException ex)
             {
-                return NotFound(ex.Message);
+                return NotFound(SM.Response.OnlyMessage(ex.Message));
             }
             catch (ConflictExeption ex)
             {
-                return Conflict(ex.Message);
+                return Conflict(SM.Response.OnlyMessage(ex.Message));
             }
             catch (Exception ex)
             {
                 return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
             }
-            
+
         }
 
         [HttpDelete("{id}")]
@@ -127,12 +138,13 @@ namespace StoreManagement.Controllers
         {
             try
             {
-                var response = await _productService.DeleteProductAsync(id);
-                return Ok(response);
-            }
-            catch (NotFoundException ex)
-            {
-                return NotFound(ex.Message);
+                var result = await _productService.DeleteProductAsync(id);
+                if (!result)
+                {
+                    return NotFound(SM.Response.OnlyMessage($"Product with Id {id} not exist"));
+                }
+
+                return Ok(SM.Response.OnlyMessage("Delete product successfully"));
             }
             catch (Exception ex)
             {
@@ -144,20 +156,21 @@ namespace StoreManagement.Controllers
         [ProducesDefaultResponseType(typeof(Response<ProductResponse>))]
         public async Task<IActionResult> GetProductByBarcode(string barcode)
         {
-            try {
-                var response = await _productService.GetProductByBarcodeAsync(barcode);
+            try
+            {
+                var result = await _productService.GetProductByBarcodeAsync(barcode);
+                var response = new Response<ProductResponse>("Get products successfully", result);
+
                 return Ok(response);
             }
             catch (NotFoundException ex)
             {
-                return NotFound(ex.Message);
+                return NotFound(SM.Response.OnlyMessage(ex.Message));
             }
             catch (Exception ex)
             {
                 return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
             }
         }
-
-        
     }
 }
