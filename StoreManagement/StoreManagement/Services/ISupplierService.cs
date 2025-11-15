@@ -1,15 +1,15 @@
 using StoreManagement.DTOs;
 using StoreManagement.DTOs.Request.Filter;
-
+using StoreManagement.DTOs.Response;
 namespace StoreManagement.Services
 {
     public interface ISupplierService
     {
-        Task<Response> GetSuppliersAsync();
-        Task<Response> GetSuppliersAsync(SupplierFilterRequest filter);
-        Task<Response> GetSupplierByIdAsync(int id);
-        Task<Response> CreateSupplierAsync(SupplierDto supplierDto);
-        Task<Response> UpdateSupplierAsync(int id, SupplierDto supplierDto);
-        Task<Response> DeleteSupplierAsync(int id);
+        Task<IEnumerable<SupplierResponse>> GetAllSuppliersAsync();
+        Task<PagedResponse<SupplierResponse>> GetALlSuppliersAsync(SupplierFilterRequest filter);
+        Task<SupplierResponse> GetSupplierByIdAsync(int id);
+        Task<SupplierResponse> CreateSupplierAsync(SupplierDto supplierDto);
+        Task<SupplierResponse> UpdateSupplierAsync(int id, SupplierDto supplierDto);
+        Task<bool> DeleteSupplierAsync(int id);
     }
 }
