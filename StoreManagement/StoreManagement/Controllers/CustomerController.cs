@@ -74,7 +74,7 @@ namespace StoreManagement.Controllers
                 var result = await _customerService.GetCustomerByIdAsync(id);
                 var response = new Response<CustomerResponse>("Customer retrieved successfully", result);
 
-                return Ok(result);
+                return Ok(response);
             }
             catch (KeyNotFoundException ex)
             {
