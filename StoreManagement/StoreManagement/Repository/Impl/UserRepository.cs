@@ -9,6 +9,13 @@ namespace StoreManagement.Repository.Impl
 		private readonly StoreManagementDbContext _context;
 		private readonly DbSet<User> _dbSet;
 
+		public IQueryable<User> GetQueryable()
+		{
+			return _context.Users
+				.Include(u => u.Orders)
+				.AsQueryable();
+		}
+
 		public UserRepository(StoreManagementDbContext context)
 		{
 			_context = context;
@@ -17,6 +24,7 @@ namespace StoreManagement.Repository.Impl
 
 		public async Task<User> AddAsync(User entity)
 		{
+			entity.CreatedAt = DateTime.UtcNow;
 			await _dbSet.AddAsync(entity);
 			await _context.SaveChangesAsync();
 			return entity;
@@ -34,18 +42,45 @@ namespace StoreManagement.Repository.Impl
 
 		public async Task<IEnumerable<User>> GetAllAsync()
 		{
-			return await _dbSet.AsNoTracking().ToListAsync();
+			return await _dbSet
+				.Include(u => u.Orders)
+				.AsNoTracking()
+				.ToListAsync();
 		}
 
 		public async Task<User> GetByIdAsync(int id)
 		{
-			var user = await _dbSet.AsNoTracking().FirstOrDefaultAsync(u => u.UserId == id);
+			var user = await _dbSet
+				.Include(u => u.Orders)
+				.AsNoTracking()
+				.FirstOrDefaultAsync(u => u.UserId == id);
 			return user ?? throw new KeyNotFoundException($"User with ID {id} not found");
 		}
 
 		public async Task<User?> GetByUsernameAsync(string username)
 		{
-			return await _dbSet.AsNoTracking().FirstOrDefaultAsync(u => u.Username == username);
+			return await _dbSet
+				.Include(u => u.Orders)
+				.AsNoTracking()
+				.FirstOrDefaultAsync(u => u.Username == username);
+		}
+
+		public async Task<IEnumerable<User>> SearchUsersByUsernameAsync(string username)
+		{
+			return await _dbSet
+				.Include(u => u.Orders)
+				.Where(u => u.Username.Contains(username))
+				.AsNoTracking()
+				.ToListAsync();
+		}
+
+		public async Task<IEnumerable<User>> SearchUsersByFullNameAsync(string fullName)
+		{
+			return await _dbSet
+				.Include(u => u.Orders)
+				.Where(u => u.FullName != null && u.FullName.Contains(fullName))
+				.AsNoTracking()
+				.ToListAsync();
 		}
 
 		public async Task<User> UpdateAsync(User entity)
@@ -64,5 +99,6 @@ namespace StoreManagement.Repository.Impl
 		}
 	}
 }
+
 
 
