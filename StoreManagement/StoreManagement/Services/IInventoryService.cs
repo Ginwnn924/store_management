@@ -7,10 +7,10 @@ namespace StoreManagement.Services
     {
         Task<IEnumerable<InventoryResponse>> GetAllAsync();
         Task<InventoryResponse?> GetByIdAsync(int id);
-        Task<InventoryResponse?> AddAsync(InventoryRequest request);
+        Task<InventoryResponse> AddAsync(InventoryRequest request);
         Task<InventoryResponse?> UpdateAsync(int id, InventoryRequest request);
         Task<bool> DeleteAsync(int id);
         Task<IEnumerable<InventoryResponse>> SearchByProductNameAsync(string productName);
-        Task<Response> GetAllInventoryAsync(InventoryFilterRequest filter);
+        Task<PagedResponse<InventoryResponse>> GetAllInventoryAsync(InventoryFilterRequest filter);
     }
 }

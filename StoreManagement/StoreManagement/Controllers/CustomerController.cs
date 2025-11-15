@@ -152,7 +152,7 @@ namespace StoreManagement.Controllers
         /// Delete a customer
         /// </summary>
         [HttpDelete("{id}")]
-        [ProducesDefaultResponseType(typeof(Response<CustomerResponse>))]
+        [ProducesDefaultResponseType(typeof(Response<object>))]
         public async Task<IActionResult> DeleteCustomer(int id)
         {
             try
