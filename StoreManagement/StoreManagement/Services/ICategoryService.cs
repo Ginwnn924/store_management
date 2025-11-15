@@ -11,6 +11,6 @@ namespace StoreManagement.Services
         Task<CategoryResponse?> UpdateCategoryAsync(int id, string categoryName);
         Task<bool> DeleteCategoryAsync(int id);
         Task<IEnumerable<CategoryResponse>> SearchByNameAsync(string categoryName);
-        Task<Response> FilterAsync(CategoryFilterRequest filter);
+        Task<PagedResponse<CategoryResponse>> FilterAsync(CategoryFilterRequest filter);
     }
 }

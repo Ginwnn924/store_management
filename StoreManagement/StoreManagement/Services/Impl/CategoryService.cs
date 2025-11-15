@@ -17,7 +17,7 @@ namespace StoreManagement.Services.Impl
             _categoryRepository = categoryRepository;
         }
 
-        public async Task<Response> FilterAsync(CategoryFilterRequest filter)
+        public async Task<PagedResponse<CategoryResponse>> FilterAsync(CategoryFilterRequest filter)
         {
             var query = _categoryRepository.GetQueryable();
             query = query.ApplyFilters(filter);
@@ -39,12 +39,7 @@ namespace StoreManagement.Services.Impl
                 filter.PageSize
             );
 
-            return new Response
-            {
-                Status = 200,
-                Message = "Lấy danh sách danh mục thành công",
-                Data = paged
-            };
+            return paged;
         }
 
         public async Task<IEnumerable<CategoryResponse>> GetAllCategoriesAsync()
