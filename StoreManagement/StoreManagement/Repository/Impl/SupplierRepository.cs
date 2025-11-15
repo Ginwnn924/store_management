@@ -9,6 +9,13 @@ namespace StoreManagement.Repository.Impl
 		private readonly StoreManagementDbContext _context;
 		private readonly DbSet<Supplier> _dbSet;
 
+		public IQueryable<Supplier> GetQueryable()
+		{
+			return _context.Suppliers
+				.Include(s => s.Products)
+				.AsQueryable();
+		}
+
 		public SupplierRepository(StoreManagementDbContext context)
 		{
 			_context = context;
@@ -62,6 +69,31 @@ namespace StoreManagement.Repository.Impl
 
 			await _context.SaveChangesAsync();
 			return existing;
+		}
+
+		public async Task<IEnumerable<Supplier>> SearchSuppliersByNameAsync(string name)
+		{
+			return await _dbSet
+				.Include(s => s.Products)
+				.Where(s => s.Name.Contains(name))
+				.AsNoTracking()
+				.ToListAsync();
+		}
+
+		public async Task<Supplier?> GetSupplierByEmailAsync(string email)
+		{
+			return await _dbSet
+				.Include(s => s.Products)
+				.AsNoTracking()
+				.FirstOrDefaultAsync(s => s.Email == email);
+		}
+
+		public async Task<Supplier?> GetSupplierByPhoneAsync(string phone)
+		{
+			return await _dbSet
+				.Include(s => s.Products)
+				.AsNoTracking()
+				.FirstOrDefaultAsync(s => s.Phone == phone);
 		}
 	}
 }

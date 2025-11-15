@@ -1,104 +1,123 @@
 using Microsoft.EntityFrameworkCore;
-using StoreManagement.Data;
 using StoreManagement.DTOs;
 using StoreManagement.DTOs.Request.Filter;
 using StoreManagement.DTOs.Response;
 using StoreManagement.Extensions;
-using StoreManagement.Models;
+using StoreManagement.Mapper;
+using StoreManagement.Repository;
+using StoreManagement.Exceptions;
 
 namespace StoreManagement.Services.Impl
 {
     public class SupplierService : ISupplierService
     {
-        private readonly StoreManagementDbContext _dbContext;
+        private readonly ISupplierRepository _supplierRepository;
+        private readonly SupplierMapper _supplierMapper = new SupplierMapper();
 
-        public SupplierService(StoreManagementDbContext dbContext)
+        public SupplierService(ISupplierRepository supplierRepository)
         {
-            _dbContext = dbContext;
+            _supplierRepository = supplierRepository;
         }
 
-        public async Task<Response> GetSuppliersAsync()
+        public async Task<IEnumerable<SupplierResponse>> GetAllSuppliersAsync()
         {
-            var suppliers = await _dbContext.Suppliers.AsNoTracking().ToListAsync();
-            return Response.Success(suppliers);
+            var suppliers = await _supplierRepository.GetAllAsync();
+            return _supplierMapper.ToDtoList(suppliers);
         }
 
-        public async Task<Response> GetSuppliersAsync(SupplierFilterRequest filter)
+        public async Task<PagedResponse<SupplierResponse>> GetALlSuppliersAsync(SupplierFilterRequest filter)
         {
-            var query = _dbContext.Suppliers.AsNoTracking().AsQueryable();
+            var query = _supplierRepository.GetQueryable();
             query = query.ApplyFilters(filter);
-
             var totalItems = await query.CountAsync();
-            var items = await query
+            var suppliers = await query
                 .Skip((filter.PageNumber - 1) * filter.PageSize)
                 .Take(filter.PageSize)
-                .Select(s => new SupplierDto
-                {
-                    SupplierId = s.SupplierId,
-                    Name = s.Name,
-                    Phone = s.Phone,
-                    Email = s.Email,
-                    Address = s.Address
-                })
                 .ToListAsync();
+            var supplierResponses = _supplierMapper.ToDtoList(suppliers).ToList();
 
-            var paged = new PagedResponse<SupplierDto>(items, totalItems, filter.PageNumber, filter.PageSize);
-            return Response.Success(paged);
+            var pagedResponse = new PagedResponse<SupplierResponse>(
+                supplierResponses,
+                totalItems,
+                filter.PageNumber,
+                filter.PageSize
+            );
+            return pagedResponse;
         }
 
-        public async Task<Response> GetSupplierByIdAsync(int id)
+        public async Task<SupplierResponse> GetSupplierByIdAsync(int id)
         {
-            var supplier = await _dbContext.Suppliers.AsNoTracking().FirstOrDefaultAsync(s => s.SupplierId == id);
+            var supplier = await _supplierRepository.GetByIdAsync(id);
+            return _supplierMapper.ToDto(supplier);
+        }
+
+        public async Task<SupplierResponse> CreateSupplierAsync(SupplierDto supplierDto)
+        {
+            // Check if email already exists
+            if (!string.IsNullOrEmpty(supplierDto.Email))
+            {
+                var existingSupplier = await _supplierRepository.GetSupplierByEmailAsync(supplierDto.Email);
+                if (existingSupplier != null)
+                {
+                    throw new ConflictExeption("Đã tồn tại email này.");
+                }
+            }
+
+            // Check if phone already exists
+            if (!string.IsNullOrEmpty(supplierDto.Phone))
+            {
+                var existingSupplier = await _supplierRepository.GetSupplierByPhoneAsync(supplierDto.Phone);
+                if (existingSupplier != null)
+                {
+                    throw new ConflictExeption("Đã tồn tại số điện thoại này.");
+                }
+            }
+
+            var supplier = _supplierMapper.ToModel(supplierDto);
+            var createdSupplier = await _supplierRepository.AddAsync(supplier);
+            var response = await _supplierRepository.GetByIdAsync(createdSupplier.SupplierId);
+            var supplierResponse = _supplierMapper.ToDto(response);
+            return supplierResponse;
+        }
+
+        public async Task<SupplierResponse> UpdateSupplierAsync(int id, SupplierDto supplierDto)
+        {
+            // Check if email already exists for a different supplier
+            if (!string.IsNullOrEmpty(supplierDto.Email))
+            {
+                var existingSupplier = await _supplierRepository.GetSupplierByEmailAsync(supplierDto.Email);
+                if (existingSupplier != null && existingSupplier.SupplierId != id)
+                {
+                    throw new ConflictExeption("Đã tồn tại email này.");
+                }
+            }
+
+            // Check if phone already exists for a different supplier
+            if (!string.IsNullOrEmpty(supplierDto.Phone))
+            {
+                var existingSupplier = await _supplierRepository.GetSupplierByPhoneAsync(supplierDto.Phone);
+                if (existingSupplier != null && existingSupplier.SupplierId != id)
+                {
+                    throw new ConflictExeption("Đã tồn tại số điện thoại này.");
+                }
+            }
+
+            var supplier = await _supplierRepository.GetByIdAsync(id);
             if (supplier == null)
             {
-                return Response.Fail("Không tìm thấy nhà cung cấp", 404);
-            }
-            return Response.Success(supplier);
-        }
-
-        public async Task<Response> CreateSupplierAsync(SupplierDto supplierDto)
-        {
-            var supplier = new Supplier
-            {
-                Name = supplierDto.Name,
-                Phone = supplierDto.Phone,
-                Email = supplierDto.Email,
-                Address = supplierDto.Address
-            };
-
-            await _dbContext.Suppliers.AddAsync(supplier);
-            await _dbContext.SaveChangesAsync();
-            return new Response(201, "Tạo nhà cung cấp thành công", supplier);
-        }
-
-        public async Task<Response> UpdateSupplierAsync(int id, SupplierDto supplierDto)
-        {
-            var existing = await _dbContext.Suppliers.FirstOrDefaultAsync(s => s.SupplierId == id);
-            if (existing == null)
-            {
-                return Response.Fail("Không tìm thấy nhà cung cấp", 404);
+                throw new NotFoundException("Không tìm thấy nhà cung cấp để cập nhật.");
             }
 
-            existing.Name = supplierDto.Name;
-            existing.Phone = supplierDto.Phone;
-            existing.Email = supplierDto.Email;
-            existing.Address = supplierDto.Address;
-
-            await _dbContext.SaveChangesAsync();
-            return Response.Success(existing, "Cập nhật nhà cung cấp thành công");
+            _supplierMapper.MapToExistingModel(supplierDto, supplier);
+            var updatedSupplier = await _supplierRepository.UpdateAsync(supplier);
+            var response = await _supplierRepository.GetByIdAsync(updatedSupplier.SupplierId);
+            var supplierResponse = _supplierMapper.ToDto(response);
+            return supplierResponse;
         }
 
-        public async Task<Response> DeleteSupplierAsync(int id)
+        public async Task<bool> DeleteSupplierAsync(int id)
         {
-            var existing = await _dbContext.Suppliers.FirstOrDefaultAsync(s => s.SupplierId == id);
-            if (existing == null)
-            {
-                return Response.Fail("Không tìm thấy nhà cung cấp", 404);
-            }
-
-            _dbContext.Suppliers.Remove(existing);
-            await _dbContext.SaveChangesAsync();
-            return Response.Success(null!, "Xóa nhà cung cấp thành công");
+            return await _supplierRepository.DeleteAsync(id);
         }
     }
 }

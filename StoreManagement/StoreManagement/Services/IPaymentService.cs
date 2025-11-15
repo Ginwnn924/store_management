@@ -1,17 +1,18 @@
-using StoreManagement;
 using StoreManagement.DTOs.Request.Filter;
 using StoreManagement.Models;
 using VNPAY.NET.Models;
+using PaymentResponse = StoreManagement.DTOs.Response.PaymentResponse;
+using PagedResponse = StoreManagement.DTOs.Response.PagedResponse<StoreManagement.DTOs.Response.PaymentResponse>;
 
 namespace StoreManagement.Services
 {
     public interface IPaymentService
     {
-        Task<Response> GetPaymentsAsync();
-        Task<Response> GetPaymentsAsync(PaymentFilterRequest filter);
-        Task<Response> GetPaymentByIdAsync(int id);
-        Task<Response> AddAsync(Payment payment);
-        Task<Response> ProcessVnpayCallbackAsync(PaymentResult paymentResult, string? vnpAmountStr);
+        Task<IEnumerable<PaymentResponse>> GetAllPaymentsAsync();
+        Task<StoreManagement.DTOs.Response.PagedResponse<PaymentResponse>> GetAllPaymentsAsync(PaymentFilterRequest filter);
+        Task<PaymentResponse> GetPaymentByIdAsync(int id);
+        Task<PaymentResponse> AddAsync(Payment payment);
+        Task<PaymentResponse> ProcessVnpayCallbackAsync(PaymentResult paymentResult, string? vnpAmountStr);
     }
 }
 
