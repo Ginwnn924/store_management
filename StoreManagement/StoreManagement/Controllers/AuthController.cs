@@ -1,16 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using StoreManagement.Data;
 using StoreManagement.DTOs;
 using StoreManagement.DTOs.Request;
-using StoreManagement.Models;
+using StoreManagement.DTOs.Response;
+using StoreManagement.Exceptions;
 using StoreManagement.Services;
-using StoreManagement.Services.Impl;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
+using StoreManagement.Utils;
+using SM = StoreManagement;
 
 namespace StoreManagement.Controllers;
 
@@ -25,24 +21,50 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult> Login( LoginRequest loginDto)
-    {   
-        var response = await _authService.loginAsync( loginDto);
-        return StatusCode(response.Status, response);
+    [ProducesDefaultResponseType(typeof(Response<AuthResponseDto>))]
+    public async Task<ActionResult> Login(LoginRequest loginDto)
+    {
+        try
+        {
+            var result = await _authService.LoginAsync(loginDto);
+            var response = new Response<LoginResponse>("Đăng nhập thành công", result);
+            return Ok(response);
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(SM.Response.OnlyMessage(ex.Message));
+        }
+        catch (VerifyException ex)
+        {
+            return Unauthorized(SM.Response.OnlyMessage(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+        }
     }
+
     [HttpPost("logout")]
+    [ProducesDefaultResponseType(typeof(Response<AuthResponseDto>))]
     [Authorize]
     public async Task<ActionResult> Logout()
     {
 
-        var authHeader = HttpContext.Request.Headers["Authorization"].FirstOrDefault();
-        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+        try
         {
-            return BadRequest(new { message = "Authorization header is missing or invalid" });
-        }
-        var jwtToken = authHeader.Substring("Bearer ".Length);
+            var authHeader = HttpContext.Request.Headers["Authorization"].FirstOrDefault();
+            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+            {
+                return BadRequest(SM.Response.OnlyMessage("Authorization header is missing or invalid"));
+            }
+            var jwtToken = authHeader.Substring("Bearer ".Length);
+            await _authService.LogoutAsync(jwtToken);
 
-        var response = await _authService.logoutAsync(jwtToken);
-        return StatusCode(response.Status, response);
+            return Ok(SM.Response.OnlyMessage("Logout Successfully"));
+        }
+        catch (Exception ex)
+        {
+            return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+        }
     }
 }

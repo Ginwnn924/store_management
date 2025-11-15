@@ -2,8 +2,10 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using StoreManagement.Data;
+using StoreManagement.DTOs;
 using StoreManagement.DTOs.Request;
 using StoreManagement.DTOs.Response;
+using StoreManagement.Exceptions;
 using StoreManagement.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -22,41 +24,28 @@ public class AuthService : IAuthService
         _configuration = configuration;
         _redisCacheService = redisCacheService;
     }
-    public async Task<Response> loginAsync(LoginRequest loginRequest)
+    public async Task<LoginResponse> LoginAsync(LoginRequest loginRequest)
     {
-        User user = await _context.Users.FirstOrDefaultAsync(u => u.Username == loginRequest.Username);
-
-        if (user == null)
-        {
-            return Response.Fail("Không tìm thấy người dùng", 404);
-        }
+        User? user = await _context.Users.FirstOrDefaultAsync(u => u.Username == loginRequest.Username)
+            ?? throw new NotFoundException("Không tìm thấy người dùng");
 
         // Verify password
         if (!BCrypt.Net.BCrypt.Verify(loginRequest.Password, user.Password))
         {
-            return Response.Fail("Invalid username or password", 401);
+            throw new VerifyException("Invalid username or password"); // can have better way than the exception
         }
 
         var token = GenerateJwtToken(user);
         string cacheKey = "jwt:" + token;
         await _redisCacheService.SetCacheAsync(cacheKey, "active", TimeSpan.FromDays(2));
 
-        return Response.Success(
-            new LoginResponse { Token = token, Username = user.Username, Role = user.Role },
-            "Đăng nhập thành công"
-        );
+        return new LoginResponse { Token = token, Username = user.Username, Role = user.Role };
     }
-    public async Task<Response> logoutAsync(String jwtToken)
+    public async Task LogoutAsync(string jwtToken)
     {
 
         string cacheKey = "jwt:" + jwtToken;
         await _redisCacheService.RemoveCacheAsync(cacheKey);
-
-        return Response.Success(new
-        {
-            message = "Logout successfully",
-            status = "success"
-        });
     }
 
     private string GenerateJwtToken(User user)
