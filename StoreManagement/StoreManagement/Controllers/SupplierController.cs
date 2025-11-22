@@ -140,9 +140,11 @@ public class SupplierController : ControllerBase
 
             return Ok(SM.Response.OnlyMessage("Delete supplier successfully"));
         }
+      
         catch (Exception ex)
         {
             return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
         }
+        
     }
 }

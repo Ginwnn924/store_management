@@ -13,7 +13,8 @@ namespace StoreManagement.Repository.Impl
 		{
 			return _context.Suppliers
 				.Include(s => s.Products)
-				.AsQueryable();
+				.Where(s => !s.IsDeleted)
+                .AsQueryable();
 		}
 
 		public SupplierRepository(StoreManagementDbContext context)
@@ -34,16 +35,17 @@ namespace StoreManagement.Repository.Impl
 			var found = await _dbSet.FindAsync(id);
 			if (found == null)
 				return false;
-			_dbSet.Remove(found);
+			found.IsDeleted = true;
 			await _context.SaveChangesAsync();
 			return true;
-		}
+        }
 
 		public async Task<IEnumerable<Supplier>> GetAllAsync()
 		{
 			return await _dbSet
 				.Include(s => s.Products)
-				.AsNoTracking()
+				.Where(s => !s.IsDeleted)
+                .AsNoTracking()
 				.ToListAsync();
 		}
 
@@ -52,7 +54,8 @@ namespace StoreManagement.Repository.Impl
 			var item = await _dbSet
 				.Include(s => s.Products)
 				.AsNoTracking()
-				.FirstOrDefaultAsync(s => s.SupplierId == id);
+				.Where(s => !s.IsDeleted)
+                .FirstOrDefaultAsync(s => s.SupplierId == id);
 			return item ?? throw new KeyNotFoundException($"Supplier with ID {id} not found");
 		}
 

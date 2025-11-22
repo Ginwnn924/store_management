@@ -27,4 +27,7 @@ public class Supplier
     public string? Address { get; set; }
 
     public ICollection<Product> Products { get; set; } = new List<Product>();
+
+    [Column("is_deleted")]
+    public bool IsDeleted { get; set; } = false;
 }
