@@ -1,22 +1,11 @@
-using System.ComponentModel.DataAnnotations;
-
-namespace StoreManagement.DTOs
+﻿namespace StoreManagement.DTOs.Response
 {
-    public class SupplierDto
+    public class SupplierResponse
     {
         public int SupplierId { get; set; }
-
-        [Required]
-        [MaxLength(100)]
         public string Name { get; set; } = string.Empty;
-
-        [MaxLength(20)]
         public string? Phone { get; set; }
-
-        [MaxLength(100)]
-        [EmailAddress]
         public string? Email { get; set; }
-
         public string? Address { get; set; }
     }
 }

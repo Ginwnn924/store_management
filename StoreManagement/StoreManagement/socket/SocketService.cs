@@ -56,7 +56,7 @@ namespace StoreManagement.socket
                         WriteIndented = true // Optional: format đẹp hơn
                     };
 
-                    string jsonString = JsonSerializer.Serialize(response.Data, options);
+                    string jsonString = JsonSerializer.Serialize(response, options);
 
                     await _manager.BroadcastToRoom(roomId, jsonString, socket);
                     //await _manager.BroadcastAsync($"Server: {message}");

@@ -6,7 +6,7 @@ using StoreManagement.Extensions;
 using StoreManagement.Mapper;
 using StoreManagement.Models;
 using StoreManagement.Repository;
-
+using StoreManagement.Exceptions;
 namespace StoreManagement.Services.Impl
 {
     public class ProductService : IProductService
@@ -19,201 +19,92 @@ namespace StoreManagement.Services.Impl
             _productRepository = productRepository;
         }
 
-        public async Task<Response> GetAllProductsAsync(ProductFilterRequest filter)
+        public async Task<PagedResponse<ProductResponse>> GetAllProductsAsync(ProductFilterRequest filter)
         {
-            try
-            {
-                var query = _productRepository.GetQueryable();
-                query = query.ApplyFilters(filter);
-                var totalItems = await query.CountAsync();                
-                var products = await query
-                    .Skip((filter.PageNumber - 1) * filter.PageSize) 
-                    .Take(filter.PageSize)
-                    .ToListAsync(); 
-                var productResponses = _productMapper.ToDtoList(products).ToList();
 
-                var pagedResponse = new PagedResponse<ProductResponse>(
-                    productResponses,
-                    totalItems,
-                    filter.PageNumber,
-                    filter.PageSize
-                );
-                return Response.Success(pagedResponse, "Products retrieved successfully");
-            }
-            catch (Exception ex)
-            {
-                return Response.Fail($"Error retrieving products: {ex.Message}", 500);
-            }
+            var query = _productRepository.GetQueryable();
+            query = query.ApplyFilters(filter);
+            var totalItems = await query.CountAsync();
+            var products = await query
+                .Skip((filter.PageNumber - 1) * filter.PageSize)
+                .Take(filter.PageSize)
+                .ToListAsync();
+            var productResponses = _productMapper.ToDtoList(products).ToList();
+
+            var pagedResponse = new PagedResponse<ProductResponse>(
+                productResponses,
+                totalItems,
+                filter.PageNumber,
+                filter.PageSize
+            );
+            return pagedResponse;
         }
 
 
-        public async Task<Response> GetAllProductsAsync()
+        public async Task<IEnumerable<ProductResponse>> GetAllProductsAsync()
         {
-            try
-            {
-                var products = await _productRepository.GetAllAsync();
-                var productResponses = _productMapper.ToDtoList(products);
-                return Response.Success(productResponses, "Products retrieved successfully");
-            }
-            catch (Exception ex)
-            {
-                return Response.Fail($"Error retrieving products: {ex.Message}", 500);
-            }
+
+            var products = await _productRepository.GetAllAsync();
+            var productResponses = _productMapper.ToDtoList(products);
+            return productResponses;
         }
 
-        public async Task<Response> GetProductByIdAsync(int id)
+        public async Task<ProductResponse> GetProductByIdAsync(int id)
         {
-            try
-            {
-                var product = await _productRepository.GetByIdAsync(id);
-                var productResponse = _productMapper.ToDto(product);
-                return Response.Success(productResponse, "Product retrieved successfully");
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return Response.Fail(ex.Message, 404);
-            }
-            catch (Exception ex)
-            {
-                return Response.Fail($"Error retrieving product: {ex.Message}", 500);
-            }
+            var product = await _productRepository.GetByIdAsync(id);
+            return _productMapper.ToDto(product);
         }
 
-        public async Task<Response> CreateProductAsync(ProductCreateRequest request)
+        public async Task<ProductResponse> CreateProductAsync(ProductCreateRequest request)
         {
-            try
-            {
-                // Check if barcode already exists
-                if (!string.IsNullOrEmpty(request.Barcode))
-                {
-                    var existingProduct = await _productRepository.GetProductByBarcodeAsync(request.Barcode);
-                    if (existingProduct != null)
-                    {
-                        return Response.Fail("A product with this barcode already exists", 400);
-                    }
-                }
 
-                var product = _productMapper.ToModel(request);
-                var createdProduct = await _productRepository.AddAsync(product);
-                var response = await _productRepository.GetByIdAsync(createdProduct.ProductId);
-                var productResponse = _productMapper.ToDto(response);
-                
-                return Response.Success(productResponse, "Product created successfully");
-            }
-            catch (Exception ex)
+            // Check if barcode already exists
+            if (!string.IsNullOrEmpty(request.Barcode))
             {
-                return Response.Fail($"Error creating product: {ex.Message}", 500);
+                var existingProduct = await _productRepository.GetProductByBarcodeAsync(request.Barcode);
+                if (existingProduct is not null) throw new ConflictExeption("Đã tồn tại barcode này .");
             }
+
+            var product = _productMapper.ToModel(request);
+            var createdProduct = await _productRepository.AddAsync(product);
+            var response = await _productRepository.GetByIdAsync(createdProduct.ProductId);
+            var productResponse = _productMapper.ToDto(response);
+            return productResponse;
         }
 
-        public async Task<Response> UpdateProductAsync(ProductUpdateRequest request,int id )
+        public async Task<ProductResponse> UpdateProductAsync(ProductUpdateRequest request, int id)
         {
-            try
-            {
-                // Check if barcode already exists for a different product
-                if (!string.IsNullOrEmpty(request.Barcode))
-                {
-                    var existingProduct = await _productRepository.GetProductByBarcodeAsync(request.Barcode);
-                    if (existingProduct != null && existingProduct.ProductId != id)
-                    {
-                        return Response.Fail("A product with this barcode already exists", 400);
-                    }
-                }
 
-                var product = _productMapper.ToModel(request,id);
-                var updatedProduct = await _productRepository.UpdateAsync(product);
-                var response = await _productRepository.GetByIdAsync(updatedProduct.ProductId);
-                var productResponse = _productMapper.ToDto(response);
-                
-                return Response.Success(productResponse, "Product updated successfully");
-            }
-            catch (KeyNotFoundException ex)
+            // Check if barcode already exists for a different product
+            if (!string.IsNullOrEmpty(request.Barcode))
             {
-                return Response.Fail(ex.Message, 404);
+                var existingProduct = await _productRepository.GetProductByBarcodeAsync(request.Barcode);
+                if (existingProduct is not null) throw new ConflictExeption("Đã tồn tại barcode này .");
             }
-            catch (Exception ex)
-            {
-                return Response.Fail($"Error updating product: {ex.Message}", 500);
-            }
+
+            var product = _productMapper.ToModel(request, id) 
+                ?? throw new NotFoundException("Không tìm thấy sản phẩm để cập nhật.");
+            
+            var updatedProduct = await _productRepository.UpdateAsync(product);
+            var response = await _productRepository.GetByIdAsync(updatedProduct.ProductId);
+            var productResponse = _productMapper.ToDto(response);
+
+            return productResponse;
         }
 
-        public async Task<Response> DeleteProductAsync(int id)
+        public async Task<bool> DeleteProductAsync(int id)
         {
-            try
-            {
-                var result = await _productRepository.DeleteAsync(id);
-                if (!result)
-                {
-                    return Response.Fail("Product not found", 404);
-                }
-                
-                return Response.Success(null, "Product deleted successfully");
-            }
-            catch (Exception ex)
-            {
-                return Response.Fail($"Error deleting product: {ex.Message}", 500);
-            }
+            return await _productRepository.DeleteAsync(id);
         }
 
-        public async Task<Response> GetProductsByCategoryAsync(int categoryId)
+        public async Task<ProductResponse> GetProductByBarcodeAsync(string barcode)
         {
-            try
+            var product = await _productRepository.GetProductByBarcodeAsync(barcode);
+            if (product == null)
             {
-                var products = await _productRepository.GetProductsByCategoryAsync(categoryId);
-                var productResponses = _productMapper.ToDtoList(products);
-                return Response.Success(productResponses, "Products retrieved successfully");
+                throw new NotFoundException("Không tìm thấy sản phẩm với mã vạch đã cho.");
             }
-            catch (Exception ex)
-            {
-                return Response.Fail($"Error retrieving products by category: {ex.Message}", 500);
-            }
-        }
-
-        public async Task<Response> GetProductsBySupplierAsync(int supplierId)
-        {
-            try
-            {
-                var products = await _productRepository.GetProductsBySupplierAsync(supplierId);
-                var productResponses = _productMapper.ToDtoList(products);
-                return Response.Success(productResponses, "Products retrieved successfully");
-            }
-            catch (Exception ex)
-            {
-                return Response.Fail($"Error retrieving products by supplier: {ex.Message}", 500);
-            }
-        }
-
-        public async Task<Response> GetProductByBarcodeAsync(string barcode)
-        {
-            try
-            {
-                var product = await _productRepository.GetProductByBarcodeAsync(barcode);
-                if (product == null)
-                {
-                    return Response.Fail("Product not found", 404);
-                }
-                
-                var productResponse = _productMapper.ToDto(product);
-                return Response.Success(productResponse, "Product retrieved successfully");
-            }
-            catch (Exception ex)
-            {
-                return Response.Fail($"Error retrieving product by barcode: {ex.Message}", 500);
-            }
-        }
-
-        public async Task<Response> SearchProductsByNameAsync(string name)
-        {
-            try
-            {
-                var products = await _productRepository.SearchProductsByNameAsync(name);
-                var productResponses = _productMapper.ToDtoList(products);
-                return Response.Success(productResponses, "Products retrieved successfully");
-            }
-            catch (Exception ex)
-            {
-                return Response.Fail($"Error searching products: {ex.Message}", 500);
-            }
+            return _productMapper.ToDto(product);
         }
     }
 }

@@ -1,144 +1,112 @@
 using Microsoft.EntityFrameworkCore;
-using StoreManagement.Data;
 using StoreManagement.DTOs.Request;
 using StoreManagement.DTOs.Request.Filter;
 using StoreManagement.DTOs.Response;
-using StoreManagement.Models;
 using StoreManagement.Extensions;
+using StoreManagement.Mapper;
+using StoreManagement.Repository;
+using StoreManagement.Exceptions;
 
 namespace StoreManagement.Services.Impl;
 
 public class UserService : IUserService
 {
-    private readonly StoreManagementDbContext _dbContext;
+    private readonly IUserRepository _userRepository;
+    private readonly UserMapper _userMapper = new UserMapper();
 
-    public UserService(StoreManagementDbContext dbContext)
+    public UserService(IUserRepository userRepository)
     {
-        _dbContext = dbContext;
+        _userRepository = userRepository;
     }
 
-    public async Task<Response> GetUsersAsync()
+    public async Task<IEnumerable<UserResponse>> GetUsersAsync()
     {
-        var users = await _dbContext.Users.AsNoTracking().ToListAsync();
-        var data = users.Select(MapToResponse).ToList();
-        return Response.Success(data);
+        var users = await _userRepository.GetAllAsync();
+        return _userMapper.ToDtoList(users);
     }
 
-    public async Task<Response> GetUsersAsync(UserFilterRequest filter)
+    public async Task<PagedResponse<UserResponse>> GetUsersAsync(UserFilterRequest filter)
     {
-        var query = _dbContext.Users.AsNoTracking().AsQueryable();
+        var query = _userRepository.GetQueryable();
         query = query.ApplyFilters(filter);
-
         var totalItems = await query.CountAsync();
         var users = await query
             .Skip((filter.PageNumber - 1) * filter.PageSize)
             .Take(filter.PageSize)
             .ToListAsync();
+        var userResponses = _userMapper.ToDtoList(users).ToList();
 
-        var items = users.Select(MapToResponse).ToList();
-        var paged = new PagedResponse<UserResponse>(items, totalItems, filter.PageNumber, filter.PageSize);
-        return Response.Success(paged);
+        var pagedResponse = new PagedResponse<UserResponse>(
+            userResponses,
+            totalItems,
+            filter.PageNumber,
+            filter.PageSize
+        );
+        return pagedResponse;
     }
 
-    public async Task<Response> GetUserByIdAsync(int id)
+    public async Task<UserResponse> GetUserByIdAsync(int id)
     {
-        var user = await _dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.UserId == id);
-        if (user == null)
-        {
-            return Response.Fail("Không tìm thấy người dùng", 404);
-        }
-
-        return Response.Success(MapToResponse(user));
+        var user = await _userRepository.GetByIdAsync(id);
+        return _userMapper.ToDto(user);
     }
 
-    public async Task<Response> CreateUserAsync(UserCreateRequest request)
+    public async Task<UserResponse> CreateUserAsync(UserCreateRequest request)
     {
         var normalizedUsername = request.Username.Trim();
         var normalizedRole = request.Role.Trim().ToLowerInvariant();
 
+        // Validate role
         if (!IsValidRole(normalizedRole))
         {
-            return Response.Fail("Role không hợp lệ. Chỉ chấp nhận 'admin' hoặc 'staff'", 400);
+            throw new ConflictExeption("Role không hợp lệ. Chỉ chấp nhận 'admin' hoặc 'staff'");
         }
 
-        var existed = await _dbContext.Users.AnyAsync(u => u.Username == normalizedUsername);
-        if (existed)
+        // Check if username already exists
+        var existingUser = await _userRepository.GetByUsernameAsync(normalizedUsername);
+        if (existingUser != null)
         {
-            return Response.Fail("Username đã tồn tại", 400);
+            throw new ConflictExeption("Username đã tồn tại");
         }
 
-        var user = new User
-        {
-            Username = normalizedUsername,
-            Password = BCrypt.Net.BCrypt.HashPassword(request.Password),
-            FullName = request.FullName?.Trim(),
-            Role = normalizedRole,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        await _dbContext.Users.AddAsync(user);
-        await _dbContext.SaveChangesAsync();
-
-        return new Response(201, "Tạo người dùng thành công", MapToResponse(user));
+        var user = _userMapper.ToModel(request);
+        var createdUser = await _userRepository.AddAsync(user);
+        var response = await _userRepository.GetByIdAsync(createdUser.UserId);
+        var userResponse = _userMapper.ToDto(response);
+        return userResponse;
     }
 
-    public async Task<Response> UpdateUserAsync(int id, UserUpdateRequest request)
+    public async Task<UserResponse> UpdateUserAsync(int id, UserUpdateRequest request)
     {
-        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.UserId == id);
-        if (user == null)
-        {
-            return Response.Fail("Không tìm thấy người dùng", 404);
-        }
-
+        // Validate role if provided
         if (request.Role != null)
         {
             var normalizedRole = request.Role.Trim().ToLowerInvariant();
             if (!IsValidRole(normalizedRole))
             {
-                return Response.Fail("Role không hợp lệ. Chỉ chấp nhận 'admin' hoặc 'staff'", 400);
+                throw new ConflictExeption("Role không hợp lệ. Chỉ chấp nhận 'admin' hoặc 'staff'");
             }
-            user.Role = normalizedRole;
         }
 
-        if (request.FullName != null)
-        {
-            user.FullName = request.FullName.Trim();
-        }
-
-        if (!string.IsNullOrWhiteSpace(request.Password))
-        {
-            user.Password = BCrypt.Net.BCrypt.HashPassword(request.Password);
-        }
-
-        await _dbContext.SaveChangesAsync();
-
-        return Response.Success(MapToResponse(user), "Cập nhật người dùng thành công");
-    }
-
-    public async Task<Response> DeleteUserAsync(int id)
-    {
-        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.UserId == id);
+        var user = await _userRepository.GetByIdAsync(id);
         if (user == null)
         {
-            return Response.Fail("Không tìm thấy người dùng", 404);
+            throw new NotFoundException("Không tìm thấy người dùng để cập nhật");
         }
 
-        _dbContext.Users.Remove(user);
-        await _dbContext.SaveChangesAsync();
+        _userMapper.MapToExistingModel(request, user);
+        var updatedUser = await _userRepository.UpdateAsync(user);
+        var response = await _userRepository.GetByIdAsync(updatedUser.UserId);
+        var userResponse = _userMapper.ToDto(response);
+        return userResponse;
+    }
 
-        return Response.Success(null!, "Xóa người dùng thành công");
+    public async Task<bool> DeleteUserAsync(int id)
+    {
+        return await _userRepository.DeleteAsync(id);
     }
 
     private static bool IsValidRole(string role)
         => role == "admin" || role == "staff";
-
-    private static UserResponse MapToResponse(User user) => new()
-    {
-        UserId = user.UserId,
-        Username = user.Username,
-        FullName = user.FullName,
-        Role = user.Role,
-        CreatedAt = user.CreatedAt
-    };
 }
 

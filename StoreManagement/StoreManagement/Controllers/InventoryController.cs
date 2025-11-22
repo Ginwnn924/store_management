@@ -3,6 +3,9 @@ using StoreManagement.DTOs.Request;
 using StoreManagement.DTOs.Request.Filter;
 using StoreManagement.DTOs.Response;
 using StoreManagement.Services;
+using StoreManagement.Utils;
+
+using SM = StoreManagement;
 
 namespace StoreManagement.Controllers
 {
@@ -18,13 +21,25 @@ namespace StoreManagement.Controllers
         }
 
         [HttpGet("filter")]
+        [ProducesDefaultResponseType(typeof(Response<PagedResponse<InventoryResponse>>))]
         public async Task<IActionResult> FilterInventories([FromQuery] InventoryFilterRequest request)
         {
-            var response = await _inventoryService.GetAllInventoryAsync(request);
-            return StatusCode(response.Status, response);
+            try
+            {
+                var result = await _inventoryService.GetAllInventoryAsync(request);
+                var response = new Response<PagedResponse<InventoryResponse>>("Lấy danh sách tồn kho thành công", result);
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+            }
         }
+
         [HttpGet]
-        public async Task<IActionResult> GetAll(
+        [ProducesDefaultResponseType(typeof(Response<PagedResponse<InventoryResponse>>))]
+        public async Task<IActionResult> GetAllInventories(
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 10)
         {
@@ -33,51 +48,103 @@ namespace StoreManagement.Controllers
                 PageNumber = pageNumber,
                 PageSize = pageSize
             };
-            var result = await _inventoryService.GetAllInventoryAsync(filter);
-            return Ok(result);
+
+            try
+            {
+                var result = await _inventoryService.GetAllInventoryAsync(filter);
+                var response = new Response<PagedResponse<InventoryResponse>>("Lấy danh sách tồn kho thành công", result);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+            }
         }
+
         [HttpPost]
-        public async Task<IActionResult> Create ([FromBody] InventoryRequest request)
+        [ProducesDefaultResponseType(typeof(Response<InventoryResponse>))]
+        public async Task<IActionResult> CreateInventory([FromBody] InventoryRequest request)
         {
-            var created = await _inventoryService.AddAsync(request);
-            return Ok(created);
+            try
+            {
+                var created = await _inventoryService.AddAsync(request);
+                var response = new Response<InventoryResponse>("Create inventory successfully", created);
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+            }
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        [ProducesDefaultResponseType(typeof(Response<InventoryResponse>))]
+        public async Task<IActionResult> GetInventoryById(int id)
         {
-            var result = await _inventoryService.GetByIdAsync(id);
-            if (result == null)
-                return NotFound(new { message = "Không tìm thấy tồn kho" });
+            try
+            {
+                var result = await _inventoryService.GetByIdAsync(id);
+                if (result == null)
+                    return NotFound(SM.Response.OnlyMessage("Không tìm thấy tồn kho"));
 
-            return Ok(result);
+                var response = new Response<InventoryResponse>("Get successfully", result);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+            }
         }
+
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] InventoryRequest request)
+        [ProducesDefaultResponseType(typeof(Response<InventoryResponse>))]
+        public async Task<IActionResult> UpdateInventory(int id, [FromBody] InventoryRequest request)
         {
-            var updated = await _inventoryService.UpdateAsync(id, request);
-            if (updated == null) return NotFound();
-            return Ok(updated);
+            try
+            {
+                var updated = await _inventoryService.UpdateAsync(id, request);
+                if (updated == null)
+                    return NotFound(SM.Response.OnlyMessage("Không tìm thấy tồn kho"));
+
+                var response = new Response<InventoryResponse>("Update successfully", updated);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+            }
         }
-
-
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        [ProducesDefaultResponseType(typeof(Response<object>))]
+        public async Task<IActionResult> DeleteInventory(int id)
         {
-            var success = await _inventoryService.DeleteAsync(id);
-            if (!success)
-                return NotFound(new { message = "Không tìm thấy tồn kho để xóa" });
+            try
+            {
+                var success = await _inventoryService.DeleteAsync(id);
+                if (!success)
+                    return NotFound(SM.Response.OnlyMessage("Không tìm thấy tồn kho để xóa"));
 
-            return Ok(new { message = "Xóa tồn kho thành công" });
+                return Ok(SM.Response.OnlyMessage("Xóa tồn kho thành công"));
+            }
+            catch (Exception ex)
+            {
+                return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+            }
         }
+
         [HttpGet("search")]
-        public async Task<IActionResult> SearchByProductName([FromQuery] string productName)
+        [ProducesDefaultResponseType(typeof(Response<IEnumerable<InventoryResponse>>))]
+        public async Task<IActionResult> SearchInventoryByProductName([FromQuery] string productName)
         {
             var result = await _inventoryService.SearchByProductNameAsync(productName);
             if (!result.Any())
-                return NotFound("Không tìm thấy sản phẩm nào phù hợp.");
-            return Ok(result);
+                return NotFound(SM.Response.OnlyMessage("Không tìm thấy sản phẩm nào phù hợp."));
+
+            var response = new Response<IEnumerable<InventoryResponse>>("Get successfully", result);
+            return Ok(response);
         }
     }
 }

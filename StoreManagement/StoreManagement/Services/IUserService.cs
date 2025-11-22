@@ -6,11 +6,11 @@ namespace StoreManagement.Services;
 
 public interface IUserService
 {
-    Task<Response> GetUsersAsync();
-    Task<Response> GetUsersAsync(UserFilterRequest filter);
-    Task<Response> GetUserByIdAsync(int id);
-    Task<Response> CreateUserAsync(UserCreateRequest request);
-    Task<Response> UpdateUserAsync(int id, UserUpdateRequest request);
-    Task<Response> DeleteUserAsync(int id);
+    Task<IEnumerable<UserResponse>> GetUsersAsync();
+    Task<PagedResponse<UserResponse>> GetUsersAsync(UserFilterRequest filter);
+    Task<UserResponse> GetUserByIdAsync(int id);
+    Task<UserResponse> CreateUserAsync(UserCreateRequest request);
+    Task<UserResponse> UpdateUserAsync(int id, UserUpdateRequest request);
+    Task<bool> DeleteUserAsync(int id);
 }
 

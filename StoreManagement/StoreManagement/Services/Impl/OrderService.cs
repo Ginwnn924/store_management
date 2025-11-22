@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using StackExchange.Redis;
+﻿using Microsoft.EntityFrameworkCore;
 using StoreManagement.DTOs.Request.Filter;
 using StoreManagement.DTOs.Response;
 using StoreManagement.Extensions;
@@ -9,12 +7,10 @@ using StoreManagement.Enum;
 using StoreManagement.Mapper;
 using StoreManagement.Models;
 using StoreManagement.Repository;
-using StoreManagement.Repository.Impl;
 using Order = StoreManagement.Models.Order;
 using VNPAY.NET;
 using VNPAY.NET.Enums;
 using VNPAY.NET.Models;
-using VNPAY.NET.Utilities;
 
 namespace StoreManagement.Services.Impl
 {
@@ -50,50 +46,40 @@ namespace StoreManagement.Services.Impl
             _paymentRepository = paymentRepository;
         }
 
-        public async Task<Response> GetAllOrdersAsync(OrderFilterRequest filter)
+        public async Task<PagedResponse<OrderResponse>> GetAllOrdersAsync(OrderFilterRequest filter)
         {
+            var query = _orderRepository.GetQueryable();
+            query = query.ApplyFilters(filter);
+            var totalItems = await query.CountAsync();
+            var orders = await query
+                .Skip((filter.PageNumber - 1) * filter.PageSize)
+                .Take(filter.PageSize)
+                .ToListAsync();
+            var orderResponses = _orderMapper.ToDtoList(orders).ToList();
 
-            try
-            {
-                var query = _orderRepository.GetQueryable();
-                query = query.ApplyFilters(filter);
-                var totalItems = await query.CountAsync();
-                var orders = await query
-                    .Skip((filter.PageNumber - 1) * filter.PageSize)
-                    .Take(filter.PageSize)
-                    .ToListAsync();
-                var orderResponses = _orderMapper.ToDtoList(orders).ToList();
+            var pagedResponse = new PagedResponse<OrderResponse>(
+                orderResponses,
+                totalItems,
+                filter.PageNumber,
+                filter.PageSize
+            );
 
-                var pagedResponse = new PagedResponse<OrderResponse>(
-                    orderResponses,
-                    totalItems,
-                    filter.PageNumber,
-                    filter.PageSize
-                );
-                return Response.Success(pagedResponse, "Orders retrieved successfully");
-            }
-            catch (Exception ex)
-            {
-                return Response.Fail($"Error retrieving Orders: {ex.Message}", 500);
-            }
+            return pagedResponse;
         }
 
-        public Task<Response> GetOrderById(int id)
+        public Task<OrderResponse> GetOrderById(int id)
         {
             throw new NotImplementedException();
         }
 
-        public async Task<Response> GetOrders()
+        public async Task<IEnumerable<OrderResponse>> GetOrders()
         {
             var listOrder = await _orderRepository.GetAllAsync();
-            return Response.Success(
-                _orderMapper.ToDtoList(listOrder)
-            );
+            return _orderMapper.ToDtoList(listOrder);
         }
 
-        public async Task<Response> CreateOrder(OrderRequest request)
+        public async Task CreateOrder(OrderRequest request)
         {
-
             if (request.PaymentMethod == Enum.PaymentMethod.cash)
             {
                 request.OrderStatus = Enum.OrderStatus.paid;
@@ -107,10 +93,10 @@ namespace StoreManagement.Services.Impl
                     PaymentMethod = PaymentMethod.cash.ToString(),
                 };
                 // Ensure we await the repository call to keep the DbContext alive within the request scope
-                await _paymentRepository.CreatePaymentAsync(payment);
+                await _paymentRepository.AddAsync(payment);
             }
-            return Response.Success("Order created successfully");
         }
+
         public async Task<long> CreateOrderOnly(OrderRequest request)
         {
             Order createdOrder = null;
@@ -159,8 +145,5 @@ namespace StoreManagement.Services.Impl
 
             return (createdOrder.OrderId, paymentUrl);
         }
-
-
-
     }
 }

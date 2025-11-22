@@ -12,6 +12,7 @@ using StoreManagement.Services;
 using StoreManagement.Services.Impl;
 using System.Text;
 using VNPAY.NET;
+using StoreManagement;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -140,6 +141,30 @@ builder.Services.AddSwaggerGen(c =>
             },
             Array.Empty<string>()
         }
+    });
+
+    c.CustomSchemaIds(type =>
+    {
+        if (type.IsGenericType)
+        {
+            var genericTypeName = type.GetGenericTypeDefinition().Name;
+            genericTypeName = genericTypeName[..genericTypeName.IndexOf('`')];
+
+            var genericArgs = string.Join("_", type.GetGenericArguments().Select(t =>
+                t.IsGenericType
+                    ? t.GetGenericTypeDefinition().Name[..t.GetGenericTypeDefinition().Name.IndexOf('`')]
+                      + "_" + string.Join("_", t.GetGenericArguments().Select(a => a.Name))
+                    : t.Name));
+
+            return genericTypeName + "_" + genericArgs;
+        }
+
+        return type.Name;
+    });
+    c.CustomOperationIds(apiDescription =>
+    {
+        var action = apiDescription.ActionDescriptor.RouteValues["action"];
+        return action;
     });
 });
 

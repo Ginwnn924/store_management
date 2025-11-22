@@ -4,10 +4,7 @@ using StoreManagement.DTOs.Request.Filter;
 using StoreManagement.DTOs.Response;
 using StoreManagement.Extensions;
 using StoreManagement.Mapper;
-using StoreManagement.Mapper;
-using StoreManagement.Models;
 using StoreManagement.Repository;
-using StoreManagement.Repository.Impl;
 
 namespace StoreManagement.Services.Impl
 {
@@ -19,7 +16,7 @@ namespace StoreManagement.Services.Impl
         {
             _repository = repository;
         }
-        public async Task<Response> GetAllInventoryAsync(InventoryFilterRequest filter)
+        public async Task<PagedResponse<InventoryResponse>> GetAllInventoryAsync(InventoryFilterRequest filter)
         {
             var query = _repository.GetQueryable();
             query = query.ApplyFilters(filter);
@@ -38,13 +35,8 @@ namespace StoreManagement.Services.Impl
                 filter.PageNumber,
                 filter.PageSize
             );
-            return new Response
-            {
-                Status = 200,
-                Message = "Lấy danh sách tồn kho thành công",
-                Data = paged
-            };
 
+            return paged;
         }
         public async Task<IEnumerable<InventoryResponse>> GetAllAsync()
         {
@@ -55,8 +47,9 @@ namespace StoreManagement.Services.Impl
         public async Task<InventoryResponse?> GetByIdAsync(int id)
         {
             var inventory = await _repository.GetByIdAsync(id);
-            return inventory?.ToResponse();
+            return inventory.ToResponse();
         }
+
         public async Task<InventoryResponse> AddAsync(InventoryRequest request)
         {
             var allInventory = await _repository.GetAllAsync();

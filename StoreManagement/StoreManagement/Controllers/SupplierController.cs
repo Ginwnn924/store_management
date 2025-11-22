@@ -1,14 +1,17 @@
 using Microsoft.AspNetCore.Mvc;
 using StoreManagement.DTOs;
 using StoreManagement.DTOs.Request.Filter;
+using StoreManagement.DTOs.Response;
+using StoreManagement.Exceptions;
 using StoreManagement.Services;
-using StoreManagement;
+using StoreManagement.Utils;
+using SM = StoreManagement;
 
 namespace StoreManagement.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class SupplierController : Controller
+public class SupplierController : ControllerBase
 {
     private readonly ISupplierService _supplierService;
 
@@ -18,57 +21,128 @@ public class SupplierController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetSuppliers(
+    [ProducesDefaultResponseType(typeof(Response<PagedResponse<SupplierResponse>>))]
+    public async Task<IActionResult> GetAllSuppliers(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
-        var filter = new SupplierFilterRequest
+        try
         {
-            PageNumber = pageNumber,
-            PageSize = pageSize
-        };
-        var response = await _supplierService.GetSuppliersAsync(filter);
-        return StatusCode(response.Status, response);
+            var filter = new SupplierFilterRequest
+            {
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
+            var result = await _supplierService.GetALlSuppliersAsync(filter);
+            var response = new Response<PagedResponse<SupplierResponse>>("Get suppliers successfully", result);
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+        }
     }
 
     [HttpGet("filter")]
-    public async Task<IActionResult> FilterSuppliers([FromQuery] SupplierFilterRequest request)
+    [ProducesDefaultResponseType(typeof(Response<PagedResponse<SupplierResponse>>))]
+    public async Task<IActionResult> FilterSuppliers([FromQuery] SupplierFilterRequest filter)
     {
-        var response = await _supplierService.GetSuppliersAsync(request);
-        return StatusCode(response.Status, response);
+        try
+        {
+            var result = await _supplierService.GetALlSuppliersAsync(filter);
+            var response = new Response<PagedResponse<SupplierResponse>>("Get suppliers successfully", result);
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+        }
     }
 
     [HttpGet("{id:int}")]
+    [ProducesDefaultResponseType(typeof(Response<SupplierResponse>))]
     public async Task<IActionResult> GetSupplierById(int id)
     {
-        var response = await _supplierService.GetSupplierByIdAsync(id);
-        return StatusCode(response.Status, response);
+        try
+        {
+            var result = await _supplierService.GetSupplierByIdAsync(id);
+            var response = new Response<SupplierResponse>("Get supplier successfully", result);
+
+            return Ok(response);
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(SM.Response.OnlyMessage(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+        }
     }
 
     [HttpPost]
+    [ProducesDefaultResponseType(typeof(Response<SupplierResponse>))]
     public async Task<IActionResult> CreateSupplier([FromBody] SupplierDto supplierDto)
     {
-        if (!ModelState.IsValid)
-            return StatusCode(400, StoreManagement.Response.Fail("Dữ liệu không hợp lệ", 400));
+        try
+        {
+            var result = await _supplierService.CreateSupplierAsync(supplierDto);
+            var response = new Response<SupplierResponse>("Create supplier successfully", result);
 
-        var response = await _supplierService.CreateSupplierAsync(supplierDto);
-        return StatusCode(response.Status, response);
+            return Ok(response);
+        }
+        catch (ConflictExeption ex)
+        {
+            return Conflict(SM.Response.OnlyMessage(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+        }
     }
 
     [HttpPut("{id:int}")]
+    [ProducesDefaultResponseType(typeof(Response<SupplierResponse>))]
     public async Task<IActionResult> UpdateSupplier(int id, [FromBody] SupplierDto supplierDto)
     {
-        if (!ModelState.IsValid)
-            return StatusCode(400, StoreManagement.Response.Fail("Dữ liệu không hợp lệ", 400));
+        try
+        {
+            var result = await _supplierService.UpdateSupplierAsync(id, supplierDto);
+            var response = new Response<SupplierResponse>("Update supplier successfully", result);
 
-        var response = await _supplierService.UpdateSupplierAsync(id, supplierDto);
-        return StatusCode(response.Status, response);
+            return Ok(response);
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(SM.Response.OnlyMessage(ex.Message));
+        }
+        catch (ConflictExeption ex)
+        {
+            return Conflict(SM.Response.OnlyMessage(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+        }
     }
 
     [HttpDelete("{id:int}")]
+    [ProducesDefaultResponseType(typeof(Response<object>))]
     public async Task<IActionResult> DeleteSupplier(int id)
     {
-        var response = await _supplierService.DeleteSupplierAsync(id);
-        return StatusCode(response.Status, response);
+        try
+        {
+            var result = await _supplierService.DeleteSupplierAsync(id);
+            if (!result)
+                return NotFound($"Supplier with Id {id} not exist");
+
+            return Ok(SM.Response.OnlyMessage("Delete supplier successfully"));
+        }
+        catch (Exception ex)
+        {
+            return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+        }
     }
 }

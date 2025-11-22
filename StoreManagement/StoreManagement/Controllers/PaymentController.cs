@@ -1,12 +1,16 @@
 using Microsoft.AspNetCore.Mvc;
-using StoreManagement.Services;
 using StoreManagement.DTOs.Request.Filter;
+using StoreManagement.DTOs.Response;
+using StoreManagement.Exceptions;
+using StoreManagement.Services;
+using StoreManagement.Utils;
+using SM = StoreManagement;
 
 namespace StoreManagement.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class PaymentController : Controller
+public class PaymentController : ControllerBase
 {
     private readonly IPaymentService _paymentService;
 
@@ -16,32 +20,67 @@ public class PaymentController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetPayments(
+    [ProducesDefaultResponseType(typeof(Response<PagedResponse<PaymentResponse>>))
+]
+    public async Task<IActionResult> GetAllPayments(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
-        var filter = new PaymentFilterRequest
+        try
         {
-            PageNumber = pageNumber,
-            PageSize = pageSize
-        };
-        var response = await _paymentService.GetPaymentsAsync(filter);
-        return StatusCode(response.Status, response);
+            var filter = new PaymentFilterRequest
+            {
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
+
+            var result = await _paymentService.GetAllPaymentsAsync(filter);
+            var response = new Response<PagedResponse<PaymentResponse>>("Get payments successfully", result);
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+        }
     }
 
     [HttpGet("filter")]
-    public async Task<IActionResult> FilterPayments([FromQuery] PaymentFilterRequest request)
+    [ProducesDefaultResponseType(typeof(Response<PagedResponse<PaymentResponse>>))
+]
+    public async Task<IActionResult> FilterPayments([FromQuery] PaymentFilterRequest filter)
     {
-        var response = await _paymentService.GetPaymentsAsync(request);
-        return StatusCode(response.Status, response);
+        try
+        {
+            var result = await _paymentService.GetAllPaymentsAsync(filter);
+            var response = new Response<PagedResponse<PaymentResponse>>("Get payments successfully", result);
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+        }
     }
 
     [HttpGet("{id:int}")]
+    [ProducesDefaultResponseType(typeof(Response<PaymentResponse>))]
     public async Task<IActionResult> GetPaymentById(int id)
     {
-        var response = await _paymentService.GetPaymentByIdAsync(id);
-        return StatusCode(response.Status, response);
+        try
+        {
+            var result = await _paymentService.GetPaymentByIdAsync(id);
+            var response = new Response<PaymentResponse>("Get payment successfully", result);
+
+            return Ok(response);
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(SM.Response.OnlyMessage(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+        }
     }
 }
-
-

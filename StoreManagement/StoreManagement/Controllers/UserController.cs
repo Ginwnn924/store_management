@@ -1,8 +1,11 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StoreManagement.DTOs.Request;
 using StoreManagement.DTOs.Request.Filter;
+using StoreManagement.DTOs.Response;
+using StoreManagement.Exceptions;
 using StoreManagement.Services;
+using StoreManagement.Utils;
+using SM = StoreManagement;
 
 namespace StoreManagement.Controllers;
 
@@ -18,62 +21,129 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetUsers(
+    [ProducesDefaultResponseType(typeof(Response<PagedResponse<UserResponse>>))]
+    public async Task<IActionResult> GetAllUsers(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
-        var filter = new UserFilterRequest
+        try
         {
-            PageNumber = pageNumber,
-            PageSize = pageSize
-        };
-        var response = await _userService.GetUsersAsync(filter);
-        return StatusCode(response.Status, response);
+            var filter = new UserFilterRequest
+            {
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
+
+            var result = await _userService.GetUsersAsync(filter);
+            var response = new Response<PagedResponse<UserResponse>>("Get users successfully", result);
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+        }
     }
 
     [HttpGet("filter")]
-    public async Task<IActionResult> FilterUsers([FromQuery] UserFilterRequest request)
+    [ProducesDefaultResponseType(typeof(Response<PagedResponse<UserResponse>>))]
+    public async Task<IActionResult> FilterUsers([FromQuery] UserFilterRequest filter)
     {
-        var response = await _userService.GetUsersAsync(request);
-        return StatusCode(response.Status, response);
+        try
+        {
+            var result = await _userService.GetUsersAsync(filter);
+            var response = new Response<PagedResponse<UserResponse>>("Get users successfully", result);
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+        }
     }
 
     [HttpGet("{id:int}")]
+    [ProducesDefaultResponseType(typeof(Response<UserResponse>))]
     public async Task<IActionResult> GetUserById(int id)
     {
-        var response = await _userService.GetUserByIdAsync(id);
-        return StatusCode(response.Status, response);
+        try
+        {
+            var result = await _userService.GetUserByIdAsync(id);
+            var response = new Response<UserResponse>("Get user successfully", result);
+
+            return Ok(response);
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(SM.Response.OnlyMessage(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+        }
     }
 
     [HttpPost]
+    [ProducesDefaultResponseType(typeof(Response<UserResponse>))]
     public async Task<IActionResult> CreateUser([FromBody] UserCreateRequest request)
     {
-        if (!ModelState.IsValid)
+        try
         {
-            return StatusCode(400, StoreManagement.Response.Fail("Dữ liệu không hợp lệ", 400));
-        }
+            var result = await _userService.CreateUserAsync(request);
+            var response = new Response<UserResponse>("Create successfully", result);
 
-        var response = await _userService.CreateUserAsync(request);
-        return StatusCode(response.Status, response);
+            return Ok(response);
+        }
+        catch (ConflictExeption ex)
+        {
+            return Conflict(SM.Response.OnlyMessage(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+        }
     }
 
     [HttpPut("{id:int}")]
+    [ProducesDefaultResponseType(typeof(Response<UserResponse>))]
     public async Task<IActionResult> UpdateUser(int id, [FromBody] UserUpdateRequest request)
     {
-        if (!ModelState.IsValid)
+        try
         {
-            return StatusCode(400, StoreManagement.Response.Fail("Dữ liệu không hợp lệ", 400));
+            var result = await _userService.UpdateUserAsync(id, request);
+            var response = new Response<UserResponse>("Update successfully", result);
+            
+            return Ok(response);
         }
-
-        var response = await _userService.UpdateUserAsync(id, request);
-        return StatusCode(response.Status, response);
+        catch (NotFoundException ex)
+        {
+            return NotFound(SM.Response.OnlyMessage(ex.Message));
+        }
+        catch (ConflictExeption ex)
+        {
+            return Conflict(SM.Response.OnlyMessage(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+        }
     }
 
     [HttpDelete("{id:int}")]
+    [ProducesDefaultResponseType(typeof(Response<object>))]
     public async Task<IActionResult> DeleteUser(int id)
     {
-        var response = await _userService.DeleteUserAsync(id);
-        return StatusCode(response.Status, response);
+        try
+        {
+            var result = await _userService.DeleteUserAsync(id);
+            if (!result)
+                return NotFound(SM.Response.OnlyMessage($"User with Id {id} not exist"));
+
+            return Ok(SM.Response.OnlyMessage("Delete successfully"));
+        }
+        catch (Exception ex)
+        {
+            return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+        }
     }
 }
-
