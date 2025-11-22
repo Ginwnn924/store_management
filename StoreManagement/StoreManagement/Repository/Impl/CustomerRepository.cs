@@ -14,6 +14,7 @@ namespace StoreManagement.Repository.Impl
         {
             return _context.Customers
                 .Include(c => c.Orders)
+                .Where(c => !c.IsDeleted)
                 .AsQueryable();
         }
 
@@ -34,10 +35,10 @@ namespace StoreManagement.Repository.Impl
         public async Task<bool> DeleteAsync(int id)
         {
             var customer = await _dbSet.FindAsync(id);
-            if (customer == null)
+            if (customer == null || customer.IsDeleted)
                 return false;
 
-            _dbSet.Remove(customer);
+            customer.IsDeleted = true;
             await _context.SaveChangesAsync();
             return true;
         }
@@ -46,6 +47,7 @@ namespace StoreManagement.Repository.Impl
         {
             return await _dbSet
                 .Include(c => c.Orders)
+                .Where(c => !c.IsDeleted)
                 .AsNoTracking()
                 .ToListAsync();
         }
@@ -54,6 +56,7 @@ namespace StoreManagement.Repository.Impl
         {
             var customer = await _dbSet
                 .Include(c => c.Orders)
+                .Where(c => !c.IsDeleted)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(c => c.CustomerId == id);
 
@@ -80,6 +83,7 @@ namespace StoreManagement.Repository.Impl
         {
             return await _dbSet
                 .Include(c => c.Orders)
+                .Where(c => !c.IsDeleted)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(c => c.Email == email);
         }
@@ -88,6 +92,7 @@ namespace StoreManagement.Repository.Impl
         {
             return await _dbSet
                 .Include(c => c.Orders)
+                .Where(c => !c.IsDeleted)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(c => c.Phone == phone);
         }
@@ -96,7 +101,7 @@ namespace StoreManagement.Repository.Impl
         {
             return await _dbSet
                 .Include(c => c.Orders)
-                .Where(c => c.Name.Contains(name))
+                .Where(c => !c.IsDeleted && c.Name.Contains(name))
                 .AsNoTracking()
                 .ToListAsync();
         }

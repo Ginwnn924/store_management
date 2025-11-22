@@ -13,6 +13,7 @@ namespace StoreManagement.Repository.Impl
 		{
 			return _context.Users
 				.Include(u => u.Orders)
+				.Where(u => !u.IsDeleted)
 				.AsQueryable();
 		}
 
@@ -33,9 +34,9 @@ namespace StoreManagement.Repository.Impl
 		public async Task<bool> DeleteAsync(int id)
 		{
 			var found = await _dbSet.FindAsync(id);
-			if (found == null)
+			if (found == null || found.IsDeleted)
 				return false;
-			_dbSet.Remove(found);
+			found.IsDeleted = true;
 			await _context.SaveChangesAsync();
 			return true;
 		}
@@ -44,6 +45,7 @@ namespace StoreManagement.Repository.Impl
 		{
 			return await _dbSet
 				.Include(u => u.Orders)
+				.Where(u => !u.IsDeleted)
 				.AsNoTracking()
 				.ToListAsync();
 		}
@@ -52,6 +54,7 @@ namespace StoreManagement.Repository.Impl
 		{
 			var user = await _dbSet
 				.Include(u => u.Orders)
+				.Where(u => !u.IsDeleted)
 				.AsNoTracking()
 				.FirstOrDefaultAsync(u => u.UserId == id);
 			return user ?? throw new KeyNotFoundException($"User with ID {id} not found");
@@ -61,6 +64,7 @@ namespace StoreManagement.Repository.Impl
 		{
 			return await _dbSet
 				.Include(u => u.Orders)
+				.Where(u => !u.IsDeleted)
 				.AsNoTracking()
 				.FirstOrDefaultAsync(u => u.Username == username);
 		}
@@ -69,7 +73,7 @@ namespace StoreManagement.Repository.Impl
 		{
 			return await _dbSet
 				.Include(u => u.Orders)
-				.Where(u => u.Username.Contains(username))
+				.Where(u => !u.IsDeleted && u.Username.Contains(username))
 				.AsNoTracking()
 				.ToListAsync();
 		}
@@ -78,7 +82,7 @@ namespace StoreManagement.Repository.Impl
 		{
 			return await _dbSet
 				.Include(u => u.Orders)
-				.Where(u => u.FullName != null && u.FullName.Contains(fullName))
+				.Where(u => !u.IsDeleted && u.FullName != null && u.FullName.Contains(fullName))
 				.AsNoTracking()
 				.ToListAsync();
 		}

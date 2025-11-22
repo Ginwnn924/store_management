@@ -15,7 +15,8 @@ namespace StoreManagement.Repository.Impl
         public IQueryable<Inventory> GetQueryable()
         {
             return _context.Inventories
-                .Include(i => i.Product) 
+                .Include(i => i.Product)
+                .Where(i => !i.IsDeleted)
                 .AsQueryable();
         }
        
@@ -23,6 +24,7 @@ namespace StoreManagement.Repository.Impl
         {
             return await _context.Inventories
                                  .Include(i => i.Product)
+                                 .Where(i => !i.IsDeleted)
                                  .ToListAsync();
         }
 
@@ -30,6 +32,7 @@ namespace StoreManagement.Repository.Impl
         {
             return await _context.Inventories
                                  .Include(i => i.Product)
+                                 .Where(i => !i.IsDeleted)
                                  .FirstOrDefaultAsync(i => i.InventoryId == id);
         }
         public async Task<Inventory> AddAsync(Inventory entity)
@@ -48,10 +51,10 @@ namespace StoreManagement.Repository.Impl
         public async Task<bool> DeleteAsync(int id)
         {
             var entity = await _context.Inventories.FindAsync(id);
-            if (entity == null)
+            if (entity == null || entity.IsDeleted)
                 return false;
 
-            _context.Inventories.Remove(entity);
+            entity.IsDeleted = true;
             await _context.SaveChangesAsync();
             return true;
         }
@@ -59,7 +62,7 @@ namespace StoreManagement.Repository.Impl
         {
             return await _context.Inventories
                 .Include(i => i.Product)
-                .Where(i => i.Product.ProductName.ToLower().Contains(productName.ToLower()))
+                .Where(i => !i.IsDeleted && i.Product.ProductName.ToLower().Contains(productName.ToLower()))
                 .ToListAsync();
         }
 

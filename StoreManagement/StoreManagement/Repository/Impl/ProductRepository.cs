@@ -11,11 +11,11 @@ namespace StoreManagement.Repository.Impl
 
         public IQueryable<Product> GetQueryable()
         {
-           
             return _context.Products
                 .Include(p => p.Category)
                 .Include(p => p.Supplier)
                 .Include(p => p.Inventory)
+                .Where(p => !p.IsDeleted)
                 .AsQueryable();
         }
 
@@ -36,10 +36,10 @@ namespace StoreManagement.Repository.Impl
         public async Task<bool> DeleteAsync(int id)
         {
             var product = await _dbSet.FindAsync(id);
-            if (product == null)
+            if (product == null || product.IsDeleted)
                 return false;
 
-            _dbSet.Remove(product);
+            product.IsDeleted = true;
             await _context.SaveChangesAsync();
             return true;
         }
@@ -50,6 +50,7 @@ namespace StoreManagement.Repository.Impl
                 .Include(p => p.Category)
                 .Include(p => p.Supplier)
                 .Include(p => p.Inventory)
+                .Where(p => !p.IsDeleted)
                 .AsNoTracking()
                 .ToListAsync();
         }
@@ -60,6 +61,7 @@ namespace StoreManagement.Repository.Impl
                 .Include(p => p.Category)
                 .Include(p => p.Supplier)
                 .Include(p => p.Inventory)
+                .Where(p => !p.IsDeleted)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.ProductId == id);
 
@@ -91,7 +93,7 @@ namespace StoreManagement.Repository.Impl
                 .Include(p => p.Category)
                 .Include(p => p.Supplier)
                 .Include(p => p.Inventory)
-                .Where(p => p.CategoryId == categoryId)
+                .Where(p => !p.IsDeleted && p.CategoryId == categoryId)
                 .AsNoTracking()
                 .ToListAsync();
         }
@@ -102,7 +104,7 @@ namespace StoreManagement.Repository.Impl
                 .Include(p => p.Category)
                 .Include(p => p.Supplier)
                 .Include(p => p.Inventory)
-                .Where(p => p.SupplierId == supplierId)
+                .Where(p => !p.IsDeleted && p.SupplierId == supplierId)
                 .AsNoTracking()
                 .ToListAsync();
         }
@@ -113,6 +115,7 @@ namespace StoreManagement.Repository.Impl
                 .Include(p => p.Category)
                 .Include(p => p.Supplier)
                 .Include(p => p.Inventory)
+                .Where(p => !p.IsDeleted)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.Barcode == barcode);
         }
@@ -123,7 +126,7 @@ namespace StoreManagement.Repository.Impl
                 .Include(p => p.Category)
                 .Include(p => p.Supplier)
                 .Include(p => p.Inventory)
-                .Where(p => p.ProductName.Contains(name))
+                .Where(p => !p.IsDeleted && p.ProductName.Contains(name))
                 .AsNoTracking()
                 .ToListAsync();
         }

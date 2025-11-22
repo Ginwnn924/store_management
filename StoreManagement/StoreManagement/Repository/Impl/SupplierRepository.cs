@@ -33,7 +33,7 @@ namespace StoreManagement.Repository.Impl
 		public async Task<bool> DeleteAsync(int id)
 		{
 			var found = await _dbSet.FindAsync(id);
-			if (found == null)
+			if (found == null || found.IsDeleted)
 				return false;
 			found.IsDeleted = true;
 			await _context.SaveChangesAsync();
@@ -78,7 +78,7 @@ namespace StoreManagement.Repository.Impl
 		{
 			return await _dbSet
 				.Include(s => s.Products)
-				.Where(s => s.Name.Contains(name))
+				.Where(s => !s.IsDeleted && s.Name.Contains(name))
 				.AsNoTracking()
 				.ToListAsync();
 		}
@@ -87,6 +87,7 @@ namespace StoreManagement.Repository.Impl
 		{
 			return await _dbSet
 				.Include(s => s.Products)
+				.Where(s => !s.IsDeleted)
 				.AsNoTracking()
 				.FirstOrDefaultAsync(s => s.Email == email);
 		}
@@ -95,6 +96,7 @@ namespace StoreManagement.Repository.Impl
 		{
 			return await _dbSet
 				.Include(s => s.Products)
+				.Where(s => !s.IsDeleted)
 				.AsNoTracking()
 				.FirstOrDefaultAsync(s => s.Phone == phone);
 		}
