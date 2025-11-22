@@ -106,6 +106,49 @@ CREATE TABLE payments (
     payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 1. Thêm cột is_deleted vào bảng categories
+ALTER TABLE categories
+ADD COLUMN is_deleted BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- 2. Thêm cột is_deleted vào bảng customers
+ALTER TABLE customers
+ADD COLUMN is_deleted BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- 3. Thêm cột is_deleted vào bảng inventory
+ALTER TABLE inventory
+ADD COLUMN is_deleted BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- 4. Thêm cột is_deleted vào bảng order_items
+ALTER TABLE order_items
+ADD COLUMN is_deleted BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- 5. Thêm cột is_deleted vào bảng orders
+ALTER TABLE orders
+ADD COLUMN is_deleted BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- 6. Thêm cột is_deleted vào bảng payments
+ALTER TABLE payments
+ADD COLUMN is_deleted BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- 7. Thêm cột is_deleted vào bảng products
+ALTER TABLE products
+ADD COLUMN is_deleted BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- 8. Thêm cột is_deleted vào bảng promotions
+ALTER TABLE promotions
+ADD COLUMN is_deleted BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- 9. Thêm cột is_deleted vào bảng suppliers
+ALTER TABLE suppliers
+ADD COLUMN is_deleted BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- 10. Thêm cột is_deleted vào bảng users
+ALTER TABLE users
+ADD COLUMN is_deleted BOOLEAN NOT NULL DEFAULT FALSE;
+
+
+
+
 -- DATA USERS
 INSERT INTO users (username,password,full_name,role) VALUES
 ('admin','123456','Quản trị viên','admin'),
