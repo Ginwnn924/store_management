@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
 
 namespace StoreManagement.DTOs.Request
@@ -24,5 +25,7 @@ namespace StoreManagement.DTOs.Request
 
         [MaxLength(255)]
         public string? ImageUrl { get; set; }
+
+        public IFormFile? ImageFile { get; set; }
     }
 }
