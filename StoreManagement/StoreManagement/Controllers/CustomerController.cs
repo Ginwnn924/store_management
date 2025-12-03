@@ -115,6 +115,32 @@ namespace StoreManagement.Controllers
             }
         }
 
+        [HttpPost("register")]
+        [ProducesDefaultResponseType(typeof(Response<CustomerRegisterRequest>))]
+        public async Task<IActionResult> Register([FromBody] CustomerRegisterRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var result = await _customerService.Register(request);
+                var response = new Response<CustomerResponse>("Customer registered successfully", result);
+
+                return Ok(response);
+            }
+            catch (DuplicateException ex)
+            {
+                return BadRequest(SM.Response.OnlyMessage(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+            }
+        }
+
         /// <summary>
         /// Update an existing customer
         /// </summary>
