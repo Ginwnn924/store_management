@@ -1,4 +1,4 @@
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using BlazorApp.Models;
 
 namespace BlazorApp.Services;
@@ -34,7 +34,7 @@ public class ProductService : IProductService
         int pageNumber = 1,
         int pageSize = 10,
         string? productName = null,
-        int? categoryId = null,
+        List<int>? categoryIds = null,
         decimal? minPrice = null,
         decimal? maxPrice = null)
     {
@@ -45,12 +45,18 @@ public class ProductService : IProductService
                 $"pageNumber={pageNumber}",
                 $"pageSize={pageSize}"
             };
+            Console.WriteLine(productName);
 
             if (!string.IsNullOrWhiteSpace(productName))
                 queryParams.Add($"ProductName={Uri.EscapeDataString(productName)}");
 
-            if (categoryId.HasValue)
-                queryParams.Add($"categoryId={categoryId.Value}");
+            if (categoryIds != null && categoryIds.Count > 0)
+            {
+                foreach (var id in categoryIds)
+                {
+                    queryParams.Add($"CategoryIds={id}");
+                }
+            }
 
             if (minPrice.HasValue)
                 queryParams.Add($"MinPrice={minPrice.Value}");

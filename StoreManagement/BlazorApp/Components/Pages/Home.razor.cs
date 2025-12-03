@@ -99,7 +99,20 @@ public partial class Home
     private async Task<(PagedResponse<ProductResponse>?, PagedResponse<CategoryResponse>?)> FetchDataAsync()
     {
         // TODO: Truyền filter params vào API khi backend hỗ trợ
-        var productsTask = ProductService.GetProductsAsync(Filter.CurrentPage, Filter.PageSize);
+        bool hasActiveFilter = !string.IsNullOrWhiteSpace(Filter.Search) ||
+                              Filter.SelectedCategoryIds.Count > 0 ||
+                              Filter.MinPrice.HasValue ||
+                              Filter.MaxPrice.HasValue;
+        //var productsTask = ProductService.GetProductsAsync(Filter.CurrentPage, Filter.PageSize);
+        var productsTask = hasActiveFilter
+            ? ProductService.FilterProductsAsync(
+                pageNumber: Filter.CurrentPage,
+                pageSize: Filter.PageSize,
+                productName: Filter.Search,
+                categoryIds: Filter.SelectedCategoryIds.Count > 0 ? Filter.SelectedCategoryIds : null,
+                minPrice: Filter.MinPrice,
+                maxPrice: Filter.MaxPrice)
+            : ProductService.GetProductsAsync(Filter.CurrentPage, Filter.PageSize);
         var categoriesTask = Categories == null
             ? CategoryService.GetCategoriesAsync(1, 50)
             : Task.FromResult<PagedResponse<CategoryResponse>?>(null);
@@ -166,5 +179,16 @@ public partial class Home
         public List<int> SelectedCategoryIds { get; set; } = [];
         public decimal? MinPrice { get; set; }
         public decimal? MaxPrice { get; set; }
+    }
+
+    private void OnProductsLoaded(PagedResponse<ProductResponse>? result)
+    {
+        if (result != null)
+        {
+            Products = result.Items;
+            Filter.TotalPages = result.TotalPages;
+            Filter.TotalItems = result.TotalItems;
+            StateHasChanged(); // Trigger re-render
+        }
     }
 }

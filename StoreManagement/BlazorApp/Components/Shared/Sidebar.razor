@@ -161,8 +161,10 @@
 
     private async Task HandleSearchKeyDown(KeyboardEventArgs e)
     {
+        Console.WriteLine($"Key pressed: {e.Key}");
         if (e.Key == "Enter")
         {
+            Console.WriteLine("Enter pressed in search box");
             await ApplyFilter();
         }
     }
