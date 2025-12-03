@@ -1,5 +1,4 @@
 ﻿using BlazorApp.Models;
-using BlazorApp.Services;
 using Microsoft.AspNetCore.Components;
 using static BlazorApp.Components.Pages.Home;
 
@@ -7,9 +6,6 @@ namespace BlazorApp.Components.Shared;
 
 public partial class Sidebar
 {
-    [Inject]
-    private IProductService ProductService { get; set; } = default!;
-
     [Parameter]
     public List<CategoryResponse>? Categories { get; set; }
 
@@ -36,8 +32,6 @@ public partial class Sidebar
             MaxPrice = Filter.MaxPrice;
         }
     }
-    [Parameter]
-    public EventCallback<PagedResponse<ProductResponse>?> OnProductsLoaded { get; set; }
 
 
     private void ToggleCategory(int categoryId)
@@ -58,21 +52,7 @@ public partial class Sidebar
 
     private async Task ApplyFilter()
     {
-        Console.WriteLine("Applying filter:");
-
-        // Gọi FilterProductsAsync
-        var result = await ProductService.FilterProductsAsync(
-            pageNumber: Filter?.CurrentPage ?? 1,
-            pageSize: Filter?.PageSize ?? 10,
-            productName: string.IsNullOrWhiteSpace(SearchText) ? null : SearchText,
-            categoryIds: SelectedCategories.Count > 0 ? [.. SelectedCategories] : null,
-            minPrice: MinPrice,
-            maxPrice: MaxPrice
-        );
-        if (OnProductsLoaded.HasDelegate)
-        {
-            await OnProductsLoaded.InvokeAsync(result);
-        }
+        // Chỉ notify parent về filter changes, để parent handle API call
         var newFilter = new FilterState
         {
             Search = string.IsNullOrWhiteSpace(SearchText) ? null : SearchText,
@@ -86,7 +66,6 @@ public partial class Sidebar
 
     private async Task ClearFilter()
     {
-        Console.WriteLine("Clearing filter:");
         SearchText = "";
         SelectedCategories.Clear();
         MinPrice = null;

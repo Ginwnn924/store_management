@@ -156,8 +156,7 @@
         <!-- Sidebar -->
         <Sidebar Categories="@Categories" 
                  Filter="@Filter"
-                 OnFilterChanged="@OnFilterChanged"
-                 OnProductsLoaded="@OnProductsLoaded" />
+                 OnFilterChanged="@OnFilterChanged" />
 
         <!-- Products Grid -->
         <div class="flex-1">
@@ -253,7 +252,7 @@
             @if (Filter.TotalPages > 1)
             {
                 <div class="flex items-center justify-center mt-10 space-x-2">
-                    <button @onclick="PreviousPage" disabled="@(Filter.CurrentPage <= 1)"
+                    <button @onclick="PreviousPageAsync" disabled="@(Filter.CurrentPage <= 1)"
                         class="p-2.5 rounded-xl border border-gray-200 text-gray-400 hover:text-primary-600 hover:border-primary-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -263,7 +262,7 @@
                     @foreach (var pageNum in GetPageNumbers())
                     {
                         var p = pageNum;
-                        <button @onclick="() => GoToPage(p)"
+                        <button @onclick="async () => await GoToPageAsync(p)"
                             class="@GetPageButtonClass(p)">
                             @p
                         </button>
@@ -272,13 +271,13 @@
                     @if (Filter.TotalPages > 5)
                     {
                         <span class="text-gray-400 px-2">...</span>
-                        <button @onclick="() => GoToPage(Filter.TotalPages)"
+                        <button @onclick="async () => await GoToPageAsync(Filter.TotalPages)"
                             class="@GetPageButtonClass(Filter.TotalPages)">
                             @Filter.TotalPages
                         </button>
                     }
 
-                    <button @onclick="NextPage" disabled="@(Filter.CurrentPage >= Filter.TotalPages)"
+                    <button @onclick="NextPageAsync" disabled="@(Filter.CurrentPage >= Filter.TotalPages)"
                         class="p-2.5 rounded-xl border border-gray-200 text-gray-400 hover:text-primary-600 hover:border-primary-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />

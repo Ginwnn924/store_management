@@ -19,22 +19,6 @@ public partial class Home
     [Inject]
     private NavigationManager Navigation { get; set; } = default!;
 
-    // ============== QUERY PARAMETERS ==============
-    [SupplyParameterFromQuery(Name = "page")]
-    public int? PageParam { get; set; }
-
-    [SupplyParameterFromQuery(Name = "search")]
-    public string? SearchParam { get; set; }
-
-    [SupplyParameterFromQuery(Name = "categories")]
-    public string? CategoriesParam { get; set; }
-
-    [SupplyParameterFromQuery(Name = "minPrice")]
-    public decimal? MinPriceParam { get; set; }
-
-    [SupplyParameterFromQuery(Name = "maxPrice")]
-    public decimal? MaxPriceParam { get; set; }
-
     // State
     private string? ErrorMessage { get; set; }
 
@@ -45,25 +29,9 @@ public partial class Home
     // Pagination & Filter state
     private FilterState Filter { get; } = new();
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnInitializedAsync()
     {
-        // Sync query params to filter state
-        Filter.CurrentPage = PageParam ?? 1;
-        Filter.Search = SearchParam;
-        Filter.SelectedCategoryIds = ParseCategoryIds(CategoriesParam);
-        Filter.MinPrice = MinPriceParam;
-        Filter.MaxPrice = MaxPriceParam;
-
         await LoadDataAsync();
-    }
-
-    private static List<int> ParseCategoryIds(string? param)
-    {
-        if (string.IsNullOrWhiteSpace(param)) return [];
-        return param.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                    .Select(s => int.TryParse(s.Trim(), out var id) ? id : 0)
-                    .Where(id => id > 0)
-                    .ToList();
     }
 
     private async Task LoadDataAsync()
@@ -122,8 +90,14 @@ public partial class Home
         return (await productsTask, await categoriesTask);
     }
 
-    // ============== NAVIGATION METHODS ==============
-    private void NavigateWithFilter()
+    // ============== FILTER & PAGINATION METHODS ==============
+    private async Task ApplyFilterAsync()
+    {
+        UpdateUrl();
+        await LoadDataAsync();
+    }
+
+    private void UpdateUrl()
     {
         var queryParams = new List<string>();
 
@@ -143,28 +117,28 @@ public partial class Home
             queryParams.Add($"maxPrice={Filter.MaxPrice.Value}");
 
         var url = queryParams.Count > 0 ? $"/?{string.Join("&", queryParams)}" : "/";
-        Navigation.NavigateTo(url);
+        Navigation.NavigateTo(url, forceLoad: false, replace: true);
     }
 
-    private void GoToPage(int page)
+    private async Task GoToPageAsync(int page)
     {
         if (page < 1 || page > Filter.TotalPages || page == Filter.CurrentPage) return;
         Filter.CurrentPage = page;
-        NavigateWithFilter();
+        await ApplyFilterAsync();
     }
 
-    private void PreviousPage() => GoToPage(Filter.CurrentPage - 1);
-    private void NextPage() => GoToPage(Filter.CurrentPage + 1);
+    private async Task PreviousPageAsync() => await GoToPageAsync(Filter.CurrentPage - 1);
+    private async Task NextPageAsync() => await GoToPageAsync(Filter.CurrentPage + 1);
 
     // Callback from Sidebar
-    private void OnFilterChanged(FilterState newFilter)
+    private async Task OnFilterChanged(FilterState newFilter)
     {
         Filter.Search = newFilter.Search;
         Filter.SelectedCategoryIds = newFilter.SelectedCategoryIds;
         Filter.MinPrice = newFilter.MinPrice;
         Filter.MaxPrice = newFilter.MaxPrice;
         Filter.CurrentPage = 1; // Reset về trang 1 khi filter thay đổi
-        NavigateWithFilter();
+        await ApplyFilterAsync();
     }
 
     // Filter state object
@@ -179,16 +153,5 @@ public partial class Home
         public List<int> SelectedCategoryIds { get; set; } = [];
         public decimal? MinPrice { get; set; }
         public decimal? MaxPrice { get; set; }
-    }
-
-    private void OnProductsLoaded(PagedResponse<ProductResponse>? result)
-    {
-        if (result != null)
-        {
-            Products = result.Items;
-            Filter.TotalPages = result.TotalPages;
-            Filter.TotalItems = result.TotalItems;
-            StateHasChanged(); // Trigger re-render
-        }
     }
 }

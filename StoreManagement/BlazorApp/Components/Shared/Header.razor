@@ -1,10 +1,11 @@
 @namespace BlazorApp.Components.Shared
+@rendermode InteractiveServer
 
 <header class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
             <!-- Logo -->
-            <div class="flex items-center space-x-2">
+            <NavLink href="/" Match="NavLinkMatch.All" class="flex items-center space-x-2">
                 <div
                     class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center shadow-lg shadow-primary-500/30">
                     <span class="text-white text-xl">🛒</span>
@@ -14,7 +15,7 @@
                         class="text-xl font-extrabold text-warm-500">Mart</span>
                     <div class="text-[10px] text-gray-400 -mt-1">Tươi ngon mỗi ngày</div>
                 </div>
-            </div>
+            </NavLink>
 
             <!-- Navigation -->
             <nav class="hidden md:flex items-center space-x-8">
@@ -60,23 +61,28 @@
                 </div>
 
                 <!-- Cart -->
-                <button
+                <button @onclick="OpenCart"
                     class="relative p-2.5 bg-primary-50 rounded-full text-primary-600 hover:bg-primary-100 transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
-                    <span
-                        class="absolute -top-1 -right-1 w-5 h-5 bg-warm-500 rounded-full text-xs flex items-center justify-center font-bold text-white">3</span>
+                    @if (CartItemCount > 0)
+                    {
+                        <span
+                            class="absolute -top-1 -right-1 w-5 h-5 bg-warm-500 rounded-full text-xs flex items-center justify-center font-bold text-white animate-pulse">@CartItemCount</span>
+                    }
                 </button>
 
                 <!-- User -->
-                <button class="p-2.5 bg-gray-100 rounded-full text-gray-600 hover:bg-gray-200 transition-colors">
+                <NavLink href="/login"
+                    class="p-2.5 bg-gray-100 rounded-full text-gray-600 hover:bg-gray-200 transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
-                </button>
+                </NavLink>
+
 
                 <!-- Mobile Menu -->
                 <button class="md:hidden p-2 text-gray-600 hover:text-primary-600">
@@ -95,3 +101,6 @@
         cho thành viên mới! 🎉
     </div>
 </header>
+
+<!-- Cart Drawer -->
+<CartDrawer @bind-IsOpen="IsCartOpen" />
