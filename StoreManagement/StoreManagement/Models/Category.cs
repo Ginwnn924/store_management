@@ -15,5 +15,8 @@ public class Category
     [MaxLength(100)]
     public string CategoryName { get; set; } = string.Empty;
 
+    [Column("is_deleted")]
+    public bool IsDeleted { get; set; } = false;
+
     public ICollection<Product> Products { get; set; } = new List<Product>();
 }

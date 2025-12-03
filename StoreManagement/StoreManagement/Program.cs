@@ -13,6 +13,7 @@ using StoreManagement.Services.Impl;
 using System.Text;
 using VNPAY.NET;
 using StoreManagement;
+using StoreManagement.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +34,7 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddSingleton<IVnpay, Vnpay>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<ICloudStorageService, CloudinaryService>();
 
 // Ioc Repository
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
@@ -45,6 +47,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("Cloudinary"));
 
 // Configure MySQL with EF Core
 var connectionString = builder.Configuration.GetConnectionString("MySql");

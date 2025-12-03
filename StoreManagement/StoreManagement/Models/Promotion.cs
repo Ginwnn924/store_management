@@ -45,5 +45,8 @@ public class Promotion
     [MaxLength(10)]
     public string Status { get; set; } = "active";
 
+    [Column("is_deleted")]
+    public bool IsDeleted { get; set; } = false;
+
     public ICollection<Order> Orders { get; set; } = new List<Order>();
 }

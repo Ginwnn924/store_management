@@ -16,7 +16,9 @@ namespace StoreManagement.Repository.Impl
 
         public IQueryable<Category> GetQueryable()
         {
-            return _context.Categories.AsQueryable();
+            return _context.Categories
+                .Where(c => !c.IsDeleted)
+                .AsQueryable();
         }
 
         public async Task<Category> AddAsync(Category entity)
@@ -29,21 +31,27 @@ namespace StoreManagement.Repository.Impl
         public async Task<bool> DeleteAsync(int id)
         {
             var category = await _context.Categories.FindAsync(id);
-            if (category == null) return false;
+            if (category == null || category.IsDeleted) return false;
 
-            _context.Categories.Remove(category);
+            category.IsDeleted = true;
             await _context.SaveChangesAsync();
             return true;
         }
 
         public async Task<IEnumerable<Category>> GetAllAsync()
         {
-            return await _context.Categories.AsNoTracking().ToListAsync();
+            return await _context.Categories
+                .Where(c => !c.IsDeleted)
+                .AsNoTracking()
+                .ToListAsync();
         }
 
         public async Task<Category?> GetByIdAsync(int id)
         {
-            return await _context.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.CategoryId == id);
+            return await _context.Categories
+                .Where(c => !c.IsDeleted)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.CategoryId == id);
         }
 
        
@@ -57,7 +65,7 @@ namespace StoreManagement.Repository.Impl
         public async Task<IEnumerable<Category>> SearchByNameAsync(string categoryName)
         {
             return await _context.Categories
-                .Where(c => c.CategoryName.ToLower().Contains(categoryName.ToLower()))
+                .Where(c => !c.IsDeleted && c.CategoryName.ToLower().Contains(categoryName.ToLower()))
                 .ToListAsync();
         }
     }

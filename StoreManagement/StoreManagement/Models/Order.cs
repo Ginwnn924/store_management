@@ -32,6 +32,9 @@ public class Order
     [Column("discount_amount", TypeName = "decimal(10,2)")]
     public decimal DiscountAmount { get; set; } = 0;
 
+    [Column("is_deleted")]
+    public bool IsDeleted { get; set; } = false;
+
     [ForeignKey("CustomerId")]
     public Customer? Customer { get; set; }
 

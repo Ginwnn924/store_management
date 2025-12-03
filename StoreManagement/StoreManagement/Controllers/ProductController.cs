@@ -86,8 +86,9 @@ namespace StoreManagement.Controllers
         }
 
         [HttpPost]
+        [Consumes("multipart/form-data")]
         [ProducesDefaultResponseType(typeof(Response<ProductResponse>))]
-        public async Task<IActionResult> CreateProduct([FromBody] ProductCreateRequest request)
+        public async Task<IActionResult> CreateProduct([FromForm] ProductCreateRequest request)
         {
             try
             {
@@ -95,6 +96,10 @@ namespace StoreManagement.Controllers
                 var response = new Response<ProductResponse>("Create successfully", result);
 
                 return Ok(response);
+            }
+            catch (InvalidException ex)
+            {
+                return BadRequest(SM.Response.OnlyMessage(ex.Message));
             }
             catch (ConflictExeption ex)
             {
@@ -107,8 +112,9 @@ namespace StoreManagement.Controllers
         }
 
         [HttpPut("{id}")]
+        [Consumes("multipart/form-data")]
         [ProducesDefaultResponseType(typeof(Response<ProductResponse>))]
-        public async Task<IActionResult> UpdateProduct(int id, [FromBody] ProductUpdateRequest request)
+        public async Task<IActionResult> UpdateProduct(int id, [FromForm] ProductUpdateRequest request)
         {
             try
             {
@@ -116,6 +122,10 @@ namespace StoreManagement.Controllers
                 var response = new Response<ProductResponse>("Update successfully", result);
 
                 return Ok(response);
+            }
+            catch (InvalidException ex)
+            {
+                return BadRequest(SM.Response.OnlyMessage(ex.Message));
             }
             catch (NotFoundException ex)
             {

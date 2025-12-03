@@ -25,6 +25,7 @@ namespace StoreManagement.Repository.Impl
                 .Include(o => o.Customer)
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
+                .Where(o => !o.IsDeleted)
                 .AsQueryable();
         }
 
@@ -47,6 +48,7 @@ namespace StoreManagement.Repository.Impl
              .Include(o => o.Customer)
              .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Product)
+             .Where(o => !o.IsDeleted)
              .AsNoTracking()
              .ToListAsync();
         }

@@ -117,7 +117,7 @@ namespace StoreManagement.Services.Impl
 
         public async Task<bool> DeleteSupplierAsync(int id)
         {
-            return await _supplierRepository.DeleteAsync(id);
+            return await _supplierRepository.DeleteAsync(id);            
         }
     }
 }

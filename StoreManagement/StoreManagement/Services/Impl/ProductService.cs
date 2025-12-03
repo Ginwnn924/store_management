@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using StoreManagement.DTOs.Request;
 using StoreManagement.DTOs.Request.Filter;
 using StoreManagement.DTOs.Response;
@@ -7,16 +8,21 @@ using StoreManagement.Mapper;
 using StoreManagement.Models;
 using StoreManagement.Repository;
 using StoreManagement.Exceptions;
+using System.IO;
+using System.Text.RegularExpressions;
 namespace StoreManagement.Services.Impl
 {
     public class ProductService : IProductService
     {
         private readonly IProductRepository _productRepository;
         private readonly ProductMapper _productMapper = new ProductMapper();
+        private readonly ICloudStorageService _cloudStorageService;
+        private static readonly Regex ImageExtensionRegex = new(@"\.(png|jpe?g|gif)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        public ProductService(IProductRepository productRepository)
+        public ProductService(IProductRepository productRepository, ICloudStorageService cloudStorageService)
         {
             _productRepository = productRepository;
+            _cloudStorageService = cloudStorageService;
         }
 
         public async Task<PagedResponse<ProductResponse>> GetAllProductsAsync(ProductFilterRequest filter)
@@ -65,6 +71,12 @@ namespace StoreManagement.Services.Impl
                 if (existingProduct is not null) throw new ConflictExeption("Đã tồn tại barcode này .");
             }
 
+            if (request.ImageFile is not null)
+            {
+                ValidateImageFile(request.ImageFile);
+                request.ImageUrl = await _cloudStorageService.UploadImageAsync(request.ImageFile);
+            }
+
             var product = _productMapper.ToModel(request);
             var createdProduct = await _productRepository.AddAsync(product);
             var response = await _productRepository.GetByIdAsync(createdProduct.ProductId);
@@ -80,6 +92,12 @@ namespace StoreManagement.Services.Impl
             {
                 var existingProduct = await _productRepository.GetProductByBarcodeAsync(request.Barcode);
                 if (existingProduct is not null) throw new ConflictExeption("Đã tồn tại barcode này .");
+            }
+
+            if (request.ImageFile is not null)
+            {
+                ValidateImageFile(request.ImageFile);
+                request.ImageUrl = await _cloudStorageService.UploadImageAsync(request.ImageFile);
             }
 
             var product = _productMapper.ToModel(request, id) 
@@ -105,6 +123,15 @@ namespace StoreManagement.Services.Impl
                 throw new NotFoundException("Không tìm thấy sản phẩm với mã vạch đã cho.");
             }
             return _productMapper.ToDto(product);
+        }
+
+        private static void ValidateImageFile(IFormFile imageFile)
+        {
+            var extension = Path.GetExtension(imageFile.FileName ?? string.Empty);
+            if (string.IsNullOrWhiteSpace(extension) || !ImageExtensionRegex.IsMatch(extension))
+            {
+                throw new InvalidException("Định dạng ảnh không hợp lệ. Chỉ chấp nhận png, jpg, jpeg, gif.");
+            }
         }
     }
 }

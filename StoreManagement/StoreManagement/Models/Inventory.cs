@@ -19,6 +19,9 @@ public class Inventory
     [Column("updated_at")]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+    [Column("is_deleted")]
+    public bool IsDeleted { get; set; } = false;
+
     [ForeignKey("ProductId")]
     public Product Product { get; set; } = null!;
 }

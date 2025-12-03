@@ -29,5 +29,8 @@ public class Customer
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    [Column("is_deleted")]
+    public bool IsDeleted { get; set; } = false;
+
     public ICollection<Order> Orders { get; set; } = new List<Order>();
 }
