@@ -1,0 +1,98 @@
+@namespace BlazorApp.Components.Shared
+
+<section class="py-8 relative overflow-hidden">
+    <!-- Section Header -->
+    <div class="flex items-center justify-between mb-6 animate-fade-in">
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-red-400 to-red-500 flex items-center justify-center shadow-lg shadow-red-500/30">
+                <span class="text-2xl">🔥</span>
+            </div>
+            <div>
+                <h2 class="text-2xl font-extrabold text-gray-800">Sản phẩm bán chạy</h2>
+                <p class="text-sm text-gray-500">Được khách hàng yêu thích nhất tuần này</p>
+            </div>
+        </div>
+        <a href="#" class="hidden sm:flex items-center gap-2 text-primary-600 hover:text-primary-700 font-semibold text-sm transition-colors">
+            Xem tất cả
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+        </a>
+    </div>
+
+    <!-- Products Horizontal Scroll -->
+    <div class="flex overflow-x-auto pb-4 space-x-4 scrollbar-hide snap-x snap-mandatory -mx-4 px-4">
+        @foreach (var (product, index) in BestSellerProducts.Select((p, i) => (p, i)))
+        {
+            <div class="flex-none w-56 snap-center animate-slide-up" style="animation-delay: @(index * 0.1)s;">
+                <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl hover:border-primary-200 transition-all duration-300 group">
+                    <!-- Rank Badge -->
+                    <div class="relative">
+                        <div class="absolute top-3 left-3 z-10 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-lg
+                            @(index == 0 ? "bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900" : 
+                              index == 1 ? "bg-gradient-to-br from-gray-300 to-gray-400 text-gray-700" : 
+                              index == 2 ? "bg-gradient-to-br from-amber-600 to-amber-700 text-white" : 
+                              "bg-primary-500 text-white")">
+                            @(index + 1)
+                        </div>
+                        
+                        @if (product.Discount > 0)
+                        {
+                            <div class="absolute top-3 right-3 z-10 px-2 py-0.5 rounded-full bg-red-500 text-white text-xs font-bold">
+                                -@product.Discount%
+                            </div>
+                        }
+                        
+                        <!-- Image -->
+                        <div class="aspect-square bg-gray-50 overflow-hidden">
+                            <img src="@product.ImageUrl" 
+                                 alt="@product.Name" 
+                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        </div>
+                        
+                        <!-- Sold Badge -->
+                        <div class="absolute bottom-2 left-2 right-2 flex justify-center">
+                            <span class="px-3 py-1 rounded-full bg-white/90 backdrop-blur-sm text-xs font-semibold text-gray-700 shadow-sm">
+                                🛒 Đã bán @product.SoldCount+
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Content -->
+                    <div class="p-3 space-y-2">
+                        <span class="text-xs text-primary-600 font-semibold">@product.Category</span>
+                        
+                        <h3 class="font-bold text-gray-800 text-sm line-clamp-2 min-h-[2.5rem] group-hover:text-primary-600 transition-colors">
+                            @product.Name
+                        </h3>
+                        
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="text-base font-extrabold text-primary-600">@FormatPrice(product.Price)</span>
+                                @if (product.OriginalPrice > product.Price)
+                                {
+                                    <span class="text-xs text-gray-400 line-through ml-1">@FormatPrice(product.OriginalPrice)</span>
+                                }
+                            </div>
+                            <button class="p-2 rounded-xl bg-primary-500 text-white hover:bg-primary-600 transition-colors shadow-md shadow-primary-500/30">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Mobile View All Button -->
+    <div class="sm:hidden text-center mt-4">
+        <a href="#" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border-2 border-primary-500 text-primary-600 font-semibold text-sm hover:bg-primary-500 hover:text-white transition-all">
+            Xem tất cả
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+        </a>
+    </div>
+</section>

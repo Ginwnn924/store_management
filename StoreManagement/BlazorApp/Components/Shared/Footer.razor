@@ -1,0 +1,209 @@
+@namespace BlazorApp.Components.Shared
+
+<footer class="bg-white border-t border-gray-200 mt-16">
+    <!-- Features Bar -->
+    <div class="border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 rounded-2xl bg-primary-100 flex items-center justify-center">
+                        <span class="text-2xl">🚚</span>
+                    </div>
+                    <div>
+                        <div class="font-bold text-gray-800 text-sm">Giao hàng nhanh</div>
+                        <div class="text-xs text-gray-500">Trong 2 giờ</div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 rounded-2xl bg-fresh-100 flex items-center justify-center">
+                        <span class="text-2xl">🥬</span>
+                    </div>
+                    <div>
+                        <div class="font-bold text-gray-800 text-sm">Tươi ngon</div>
+                        <div class="text-xs text-gray-500">100% đảm bảo</div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 rounded-2xl bg-warm-100 flex items-center justify-center">
+                        <span class="text-2xl">💰</span>
+                    </div>
+                    <div>
+                        <div class="font-bold text-gray-800 text-sm">Giá tốt nhất</div>
+                        <div class="text-xs text-gray-500">Tiết kiệm hơn</div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center">
+                        <span class="text-2xl">🔄</span>
+                    </div>
+                    <div>
+                        <div class="font-bold text-gray-800 text-sm">Đổi trả dễ dàng</div>
+                        <div class="text-xs text-gray-500">Trong 24 giờ</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+            <!-- Brand Column -->
+            <div class="space-y-5">
+                <div class="flex items-center space-x-2">
+                    <div
+                        class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center shadow-lg shadow-primary-500/30">
+                        <span class="text-white text-lg">🛒</span>
+                    </div>
+                    <div>
+                        <span class="text-xl font-extrabold text-primary-600">Fresh</span><span
+                            class="text-xl font-extrabold text-warm-500">Mart</span>
+                    </div>
+                </div>
+                <p class="text-gray-500 text-sm leading-relaxed">
+                    Siêu thị mini online - mang đến cho bạn những sản phẩm tươi ngon nhất
+                    với giá cả hợp lý và giao hàng tận nơi.
+                </p>
+                <div class="flex space-x-3">
+                    <a href="#"
+                        class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-primary-500 hover:text-white transition-all">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                        </svg>
+                    </a>
+                    <a href="#"
+                        class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-primary-500 hover:text-white transition-all">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                        </svg>
+                    </a>
+                    <a href="#"
+                        class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-primary-500 hover:text-white transition-all">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div>
+                <h4 class="text-base font-bold text-gray-800 mb-5">Liên kết nhanh</h4>
+                <ul class="space-y-3">
+                    <li><a href="#"
+                            class="text-gray-500 hover:text-primary-600 transition-colors text-sm flex items-center gap-2"><span>›</span>
+                            Trang chủ</a></li>
+                    <li><a href="#"
+                            class="text-gray-500 hover:text-primary-600 transition-colors text-sm flex items-center gap-2"><span>›</span>
+                            Sản phẩm</a></li>
+                    <li><a href="#"
+                            class="text-gray-500 hover:text-primary-600 transition-colors text-sm flex items-center gap-2"><span>›</span>
+                            Khuyến mãi</a></li>
+                    <li><a href="#"
+                            class="text-gray-500 hover:text-primary-600 transition-colors text-sm flex items-center gap-2"><span>›</span>
+                            Về chúng tôi</a></li>
+                    <li><a href="#"
+                            class="text-gray-500 hover:text-primary-600 transition-colors text-sm flex items-center gap-2"><span>›</span>
+                            Liên hệ</a></li>
+                </ul>
+            </div>
+
+            <!-- Support -->
+            <div>
+                <h4 class="text-base font-bold text-gray-800 mb-5">Hỗ trợ khách hàng</h4>
+                <ul class="space-y-3">
+                    <li><a href="#"
+                            class="text-gray-500 hover:text-primary-600 transition-colors text-sm flex items-center gap-2"><span>›</span>
+                            Hướng dẫn mua hàng</a></li>
+                    <li><a href="#"
+                            class="text-gray-500 hover:text-primary-600 transition-colors text-sm flex items-center gap-2"><span>›</span>
+                            Chính sách đổi trả</a></li>
+                    <li><a href="#"
+                            class="text-gray-500 hover:text-primary-600 transition-colors text-sm flex items-center gap-2"><span>›</span>
+                            Phương thức thanh toán</a></li>
+                    <li><a href="#"
+                            class="text-gray-500 hover:text-primary-600 transition-colors text-sm flex items-center gap-2"><span>›</span>
+                            Vận chuyển & Giao hàng</a></li>
+                    <li><a href="#"
+                            class="text-gray-500 hover:text-primary-600 transition-colors text-sm flex items-center gap-2"><span>›</span>
+                            Câu hỏi thường gặp</a></li>
+                </ul>
+            </div>
+
+            <!-- Contact -->
+            <div>
+                <h4 class="text-base font-bold text-gray-800 mb-5">Liên hệ</h4>
+                <ul class="space-y-4">
+                    <li class="flex items-start space-x-3">
+                        <span class="text-lg">📍</span>
+                        <span class="text-gray-500 text-sm">123 Đường ABC, Phường XYZ, Quận 1, TP.HCM</span>
+                    </li>
+                    <li class="flex items-center space-x-3">
+                        <span class="text-lg">📞</span>
+                        <span class="text-gray-500 text-sm font-semibold">1900 1234</span>
+                    </li>
+                    <li class="flex items-center space-x-3">
+                        <span class="text-lg">✉️</span>
+                        <span class="text-gray-500 text-sm">support@freshmart.vn</span>
+                    </li>
+                    <li class="flex items-center space-x-3">
+                        <span class="text-lg">⏰</span>
+                        <span class="text-gray-500 text-sm">6:00 - 22:00 hàng ngày</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- App Download -->
+        <div class="mt-10 pt-8 border-t border-gray-100">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div>
+                    <h4 class="text-base font-bold text-gray-800 mb-1">Tải ứng dụng FreshMart</h4>
+                    <p class="text-gray-500 text-sm">Mua sắm dễ dàng hơn với app di động</p>
+                </div>
+                <div class="flex gap-3">
+                    <a href="#"
+                        class="flex items-center gap-2 px-4 py-2.5 bg-gray-900 rounded-xl text-white hover:bg-gray-800 transition-colors">
+                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+                        </svg>
+                        <div class="text-left">
+                            <div class="text-[10px] opacity-80">Download on the</div>
+                            <div class="text-sm font-semibold -mt-0.5">App Store</div>
+                        </div>
+                    </a>
+                    <a href="#"
+                        class="flex items-center gap-2 px-4 py-2.5 bg-gray-900 rounded-xl text-white hover:bg-gray-800 transition-colors">
+                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 01-.61-.92V2.734a1 1 0 01.609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.198l2.807 1.626a1 1 0 010 1.73l-2.808 1.626L15.206 12l2.492-2.491zM5.864 2.658L16.8 8.99l-2.302 2.302-8.634-8.634z" />
+                        </svg>
+                        <div class="text-left">
+                            <div class="text-[10px] opacity-80">GET IT ON</div>
+                            <div class="text-sm font-semibold -mt-0.5">Google Play</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Bar -->
+        <div class="mt-8 pt-6 border-t border-gray-100">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <p class="text-gray-400 text-sm">
+                    © 2024 FreshMart. All rights reserved.
+                </p>
+                <div class="flex items-center space-x-4">
+                    <a href="#" class="text-gray-400 hover:text-gray-600 text-sm transition-colors">Điều khoản sử
+                        dụng</a>
+                    <span class="text-gray-300">|</span>
+                    <a href="#" class="text-gray-400 hover:text-gray-600 text-sm transition-colors">Chính sách bảo
+                        mật</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>

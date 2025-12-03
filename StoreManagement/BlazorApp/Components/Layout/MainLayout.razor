@@ -1,0 +1,26 @@
+﻿@inherits LayoutComponentBase
+@using BlazorApp.Components.Shared
+
+<!-- Header -->
+<Header />
+
+<!-- Main Layout -->
+<div class="pt-24 min-h-screen">
+    @Body
+</div>
+
+<!-- Footer -->
+<Footer />
+
+<div id="blazor-error-ui" data-nosnippet
+    class="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-red-900/90 backdrop-blur-sm text-white p-4 rounded-xl border border-red-700 z-50 hidden">
+    <div class="flex items-center space-x-3">
+        <svg class="w-6 h-6 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span class="text-sm">An unhandled error has occurred.</span>
+        <a href="." class="text-red-300 hover:text-white underline text-sm">Reload</a>
+        <button class="dismiss text-red-300 hover:text-white ml-auto">✕</button>
+    </div>
+</div>

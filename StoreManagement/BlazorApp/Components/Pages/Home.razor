@@ -1,0 +1,308 @@
+﻿@page "/"
+@using BlazorApp.Components.Shared
+@rendermode InteractiveServer
+
+<PageTitle>FreshMart - Siêu thị mini online</PageTitle>
+
+<!-- Hero Section -->
+<section class="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-fresh-50">
+    <div class="absolute inset-0 overflow-hidden">
+        <div class="absolute -top-40 -right-40 w-96 h-96 bg-primary-200/30 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-warm-200/30 rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16 lg:pt-32 lg:pb-24">
+        <div class="grid lg:grid-cols-2 gap-12 items-center">
+            <div class="space-y-6 animate-fade-in">
+                <div
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-100 border border-primary-200">
+                    <span class="animate-bounce-slow">🎉</span>
+                    <span class="text-primary-700 text-sm font-semibold">Freeship đơn từ 200K</span>
+                </div>
+
+                <h1 class="text-4xl lg:text-6xl font-extrabold leading-tight">
+                    <span class="text-gray-800">Mua sắm</span>
+                    <br />
+                    <span class="gradient-text">Tươi ngon</span>
+                    <br />
+                    <span class="text-gray-800">Mỗi ngày!</span>
+                </h1>
+
+                <p class="text-lg text-gray-600 max-w-lg">
+                    Rau củ tươi, thịt cá sạch, đồ khô chất lượng - giao tận nhà trong 2 giờ.
+                    Tiện lợi như đi chợ, tiết kiệm hơn siêu thị!
+                </p>
+
+                <div class="flex flex-wrap gap-4">
+                    <button
+                        class="px-8 py-4 rounded-2xl bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold hover:from-primary-600 hover:to-primary-700 transition-all shadow-xl shadow-primary-500/30 flex items-center gap-2">
+                        <span>Mua ngay</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                    </button>
+                    <button
+                        class="px-8 py-4 rounded-2xl border-2 border-gray-300 text-gray-700 font-bold hover:border-primary-500 hover:text-primary-600 transition-all flex items-center gap-2">
+                        <span>📱</span>
+                        <span>Tải App</span>
+                    </button>
+                </div>
+
+                <!-- Stats -->
+                <div class="flex flex-wrap gap-8 pt-6">
+                    <div class="text-center">
+                        <div class="text-3xl font-extrabold text-primary-600">@Filter.TotalItems+</div>
+                        <div class="text-gray-500 text-sm">Sản phẩm</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-extrabold text-primary-600">20K+</div>
+                        <div class="text-gray-500 text-sm">Khách hàng</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-extrabold text-primary-600">4.9⭐</div>
+                        <div class="text-gray-500 text-sm">Đánh giá</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative hidden lg:block animate-slide-up">
+                <div class="relative">
+                    <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=600" alt="Fresh groceries"
+                        class="w-full h-auto rounded-3xl shadow-2xl" />
+
+                    <!-- Floating cards -->
+                    <div class="absolute -left-8 top-1/4 bg-white rounded-2xl p-4 shadow-xl animate-bounce-slow">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
+                                <span class="text-2xl">🥬</span>
+                            </div>
+                            <div>
+                                <div class="text-sm font-bold text-gray-800">Rau củ tươi</div>
+                                <div class="text-xs text-green-600 font-semibold">100% hữu cơ</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="absolute -right-8 bottom-1/3 bg-white rounded-2xl p-4 shadow-xl animate-bounce-slow"
+                        style="animation-delay: 0.5s;">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center">
+                                <span class="text-2xl">🚚</span>
+                            </div>
+                            <div>
+                                <div class="text-sm font-bold text-gray-800">Giao hàng</div>
+                                <div class="text-xs text-red-500 font-semibold">Trong 2 giờ</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="absolute left-1/4 -bottom-6 bg-white rounded-2xl p-4 shadow-xl animate-bounce-slow"
+                        style="animation-delay: 1s;">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-12 h-12 rounded-xl bg-yellow-100 flex items-center justify-center">
+                                <span class="text-2xl">💰</span>
+                            </div>
+                            <div>
+                                <div class="text-sm font-bold text-gray-800">Tiết kiệm</div>
+                                <div class="text-xs text-yellow-600 font-semibold">Đến 30%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Category Quick Links -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-4 md:grid-cols-8 gap-4">
+        @if (Categories != null)
+        {
+            foreach (var cat in Categories)
+            {
+                <div class="flex flex-col items-center">
+                    <button 
+                        class="relative group bg-white border border-gray-200 hover:border-primary-500 transition-all rounded-2xl p-4 w-full flex flex-col items-center shadow-md hover:shadow-xl min-h-[120px] mb-2"
+                        style="outline: none;"
+                    >
+                        <div class="flex items-center justify-center w-12 h-12 rounded-xl mb-2 bg-gradient-to-br from-primary-100 to-primary-200 shadow group-hover:from-primary-200 group-hover:to-yellow-100 transition-colors duration-200">
+                            <span class="text-2xl font-bold text-primary-600">
+                                <i class="fa fa-lemon"></i>
+                            </span>
+                        </div>
+                        <div class="text-sm font-medium text-gray-700 group-hover:text-primary-700 duration-150 text-center">
+                            @cat.CategoryName
+                        </div>
+                        <span class="absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded-full border border-primary-100 bg-white text-primary-500 group-hover:bg-primary-100 group-hover:text-primary-700 shadow-sm">
+                            Khám phá
+                        </span>
+                    </button>
+                </div>
+            }
+        }
+    </div>
+</section>
+
+<!-- Best Sellers Section -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <BestSellers />
+</section>
+
+<!-- Main Content with Sidebar -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="flex flex-col lg:flex-row gap-8">
+        <!-- Sidebar -->
+        <Sidebar Categories="@Categories" 
+                 Filter="@Filter"
+                 OnFilterChanged="@OnFilterChanged" />
+
+        <!-- Products Grid -->
+        <div class="flex-1">
+            <!-- Section Header -->
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center">
+                        <span class="text-xl">🛍️</span>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-extrabold text-gray-800">Tất cả sản phẩm</h2>
+                        <p class="text-gray-500 text-sm">Hiển thị @(Products?.Count ?? 0) / @Filter.TotalItems sản phẩm</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <select
+                        class="bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20">
+                        <option>Mới nhất</option>
+                        <option>Giá: Thấp đến cao</option>
+                        <option>Giá: Cao đến thấp</option>
+                        <option>Bán chạy</option>
+                    </select>
+                    <div class="hidden sm:flex items-center bg-gray-100 rounded-xl p-1">
+                        <button class="p-2 rounded-lg bg-white text-primary-600 shadow-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                            </svg>
+                        </button>
+                        <button class="p-2 rounded-lg text-gray-400 hover:text-gray-600">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">⚠️</span>
+                        <div>
+                            <p class="text-red-800 font-semibold">Có lỗi xảy ra</p>
+                            <p class="text-red-600 text-sm">@ErrorMessage</p>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Loading State: Products == null means loading -->
+            @if (Products == null)
+            {
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                    @for (int i = 0; i < 6; i++)
+                    {
+                        <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 animate-pulse">
+                            <div class="aspect-square bg-gray-200"></div>
+                            <div class="p-4 space-y-3">
+                                <div class="h-4 bg-gray-200 rounded w-1/3"></div>
+                                <div class="h-5 bg-gray-200 rounded w-3/4"></div>
+                                <div class="h-6 bg-gray-200 rounded w-1/2"></div>
+                                <div class="h-10 bg-gray-200 rounded"></div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else if (Products.Count == 0)
+            {
+                <!-- Empty State -->
+                <div class="text-center py-16">
+                    <div class="text-6xl mb-4">📦</div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Chưa có sản phẩm</h3>
+                    <p class="text-gray-500">Sản phẩm sẽ sớm được cập nhật</p>
+                </div>
+            }
+            else
+            {
+                <!-- Products Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                    @foreach (var (product, index) in Products.Select((p, i) => (p, i)))
+                    {
+                        <ProductCard Product="@product" AnimationDelay="@GetAnimationDelay(index)" />
+                    }
+                </div>
+            }
+
+            <!-- Pagination -->
+            @if (Filter.TotalPages > 1)
+            {
+                <div class="flex items-center justify-center mt-10 space-x-2">
+                    <button @onclick="PreviousPage" disabled="@(Filter.CurrentPage <= 1)"
+                        class="p-2.5 rounded-xl border border-gray-200 text-gray-400 hover:text-primary-600 hover:border-primary-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+
+                    @foreach (var pageNum in GetPageNumbers())
+                    {
+                        var p = pageNum;
+                        <button @onclick="() => GoToPage(p)"
+                            class="@GetPageButtonClass(p)">
+                            @p
+                        </button>
+                    }
+
+                    @if (Filter.TotalPages > 5)
+                    {
+                        <span class="text-gray-400 px-2">...</span>
+                        <button @onclick="() => GoToPage(Filter.TotalPages)"
+                            class="@GetPageButtonClass(Filter.TotalPages)">
+                            @Filter.TotalPages
+                        </button>
+                    }
+
+                    <button @onclick="NextPage" disabled="@(Filter.CurrentPage >= Filter.TotalPages)"
+                        class="p-2.5 rounded-xl border border-gray-200 text-gray-400 hover:text-primary-600 hover:border-primary-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+@code {
+    // ============== UI CONSTANTS & HELPERS ==============
+
+    // Animation delay for staggered product cards
+    private static double GetAnimationDelay(int index) => index * 0.05;
+
+    // Format price for display
+    private static string FormatPrice(decimal price) => $"{price:N0}đ";
+
+    // Get page numbers for pagination
+    private IEnumerable<int> GetPageNumbers() => Enumerable.Range(1, Math.Min(Filter.TotalPages, 5));
+
+    // Get CSS class for page button
+    private string GetPageButtonClass(int page) => Filter.CurrentPage == page
+        ? "w-10 h-10 rounded-xl bg-primary-500 text-white font-bold shadow-lg shadow-primary-500/30"
+        : "w-10 h-10 rounded-xl border border-gray-200 text-gray-600 hover:text-primary-600 hover:border-primary-500 transition-all font-semibold";
+}

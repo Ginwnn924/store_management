@@ -1,0 +1,169 @@
+@namespace BlazorApp.Components.Shared
+
+<aside class="w-72 flex-shrink-0 sticky top-28 h-[calc(100vh-7rem)] overflow-y-auto pr-4">
+    <div class="space-y-5">
+        <!-- Search Box -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 animate-fade-in">
+            <h3 class="text-base font-bold text-gray-800 mb-3 flex items-center">
+                <span class="mr-2">🔍</span>
+                Tìm kiếm
+            </h3>
+            <div class="relative">
+                <input type="text" placeholder="Nhập tên sản phẩm..."
+                    @bind="SearchText"
+                    @bind:event="oninput"
+                    @onkeydown="HandleSearchKeyDown"
+                    class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all" />
+                @if (!string.IsNullOrEmpty(SearchText))
+                {
+                    <button @onclick="() => { SearchText = string.Empty; }" 
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                }
+            </div>
+        </div>
+
+        <!-- Categories Filter -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 animate-fade-in"
+            style="animation-delay: 0.1s;">
+            <h3 class="text-base font-bold text-gray-800 mb-3 flex items-center">
+                <span class="mr-2">📦</span>
+                Danh mục
+                @if (SelectedCategories.Count > 0)
+                {
+                    <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-primary-100 text-primary-600 font-semibold">
+                        @SelectedCategories.Count
+                    </span>
+                }
+            </h3>
+            <div class="space-y-1 max-h-48 overflow-y-auto">
+                @if (Categories == null)
+                {
+                    @for (int i = 0; i < 4; i++)
+                    {
+                        <div class="flex items-center p-2.5 animate-pulse">
+                            <div class="w-4 h-4 bg-gray-200 rounded"></div>
+                            <div class="ml-3 h-4 bg-gray-200 rounded w-24"></div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    @foreach (var category in Categories)
+                    {
+                        var catId = category.CategoryId;
+                        <label class="flex items-center p-2.5 rounded-xl hover:bg-primary-50 cursor-pointer transition-colors group @(IsCategorySelected(catId) ? "bg-primary-50" : "")">
+                            <input type="checkbox"
+                                checked="@IsCategorySelected(catId)"
+                                @onchange="() => ToggleCategory(catId)"
+                                class="w-4 h-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500" />
+                            <span class="ml-3 text-sm @(IsCategorySelected(catId) ? "text-primary-700 font-medium" : "text-gray-600") group-hover:text-primary-700 transition-colors flex items-center">
+                                <span class="mr-2"><i class="fa fa-lemon"></i></span>
+                                @category.CategoryName
+                            </span>
+                        </label>
+                    }
+                }
+            </div>
+        </div>
+
+        <!-- Price Range -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 animate-fade-in"
+            style="animation-delay: 0.2s;">
+            <h3 class="text-base font-bold text-gray-800 mb-3 flex items-center">
+                <span class="mr-2">💰</span>
+                Khoảng giá
+            </h3>
+            <div class="space-y-4">
+                <div class="flex items-center space-x-3">
+                    <input type="number" placeholder="Từ" min="0"
+                        @bind="MinPrice"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-primary-500 transition-colors" />
+                    <span class="text-gray-400">-</span>
+                    <input type="number" placeholder="Đến" min="0"
+                        @bind="MaxPrice"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-primary-500 transition-colors" />
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button @onclick="() => SetPriceRange(null, 50000)"
+                        class="@GetPriceButtonClass(null, 50000)">
+                        Dưới 50K
+                    </button>
+                    <button @onclick="() => SetPriceRange(50000, 100000)"
+                        class="@GetPriceButtonClass(50000, 100000)">
+                        50K - 100K
+                    </button>
+                    <button @onclick="() => SetPriceRange(100000, 200000)"
+                        class="@GetPriceButtonClass(100000, 200000)">
+                        100K - 200K
+                    </button>
+                    <button @onclick="() => SetPriceRange(200000, null)"
+                        class="@GetPriceButtonClass(200000, null)">
+                        Trên 200K
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Promotions -->
+        <div class="bg-gradient-to-br from-warm-400 to-warm-500 rounded-2xl p-5 text-white animate-fade-in"
+            style="animation-delay: 0.3s;">
+            <div class="text-2xl mb-2">🎁</div>
+            <h3 class="text-lg font-bold mb-2">Ưu đãi hôm nay</h3>
+            <p class="text-sm text-white/90 mb-3">Giảm đến 30% cho rau củ tươi!</p>
+            <button
+                class="w-full py-2 rounded-xl bg-white text-warm-600 font-bold text-sm hover:bg-gray-100 transition-colors">
+                Xem ngay
+            </button>
+        </div>
+
+        <!-- Filter Buttons -->
+        <div class="space-y-2">
+            <button @onclick="ApplyFilter"
+                class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold hover:from-primary-600 hover:to-primary-700 transition-all shadow-lg shadow-primary-500/30 animate-fade-in flex items-center justify-center gap-2"
+                style="animation-delay: 0.4s;">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                Lọc sản phẩm
+            </button>
+            
+            @if (HasActiveFilters)
+            {
+                <button @onclick="ClearFilter"
+                    class="w-full py-2.5 px-4 rounded-xl border border-gray-300 text-gray-600 font-semibold hover:bg-gray-100 transition-all flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Xóa bộ lọc
+                </button>
+            }
+        </div>
+    </div>
+</aside>
+
+@code {
+    // UI Helpers
+    private bool HasActiveFilters => 
+        !string.IsNullOrEmpty(SearchText) || 
+        SelectedCategories.Count > 0 || 
+        MinPrice.HasValue || 
+        MaxPrice.HasValue;
+
+    private string GetPriceButtonClass(decimal? min, decimal? max) =>
+        (MinPrice == min && MaxPrice == max)
+            ? "px-3 py-1.5 text-xs rounded-full bg-primary-500 text-white transition-all font-medium"
+            : "px-3 py-1.5 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-primary-100 hover:text-primary-700 transition-all font-medium";
+
+    private async Task HandleSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await ApplyFilter();
+        }
+    }
+}
