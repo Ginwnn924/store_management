@@ -49,10 +49,10 @@
                                 <span>👤</span> Email hoặc số điện thoại
                             </span>
                         </label>
-                        <InputText @bind-Value="LoginModel.Username"
+                        <InputText @bind-Value="LoginModel.Email"
                             class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-700 placeholder-gray-400 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all"
                             placeholder="email@example.com" />
-                        <ValidationMessage For="@(() => LoginModel.Username)" class="text-red-500 text-xs mt-1" />
+                        <ValidationMessage For="@(() => LoginModel.Email)" class="text-red-500 text-xs mt-1" />
                     </div>
 
                     <!-- Password -->
@@ -186,6 +186,21 @@
     private bool RememberMe { get; set; }
     private string? ErrorMessage { get; set; }
 
+    [Inject]
+    private IToastService ToastService { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Check if already logged in
+        await AuthService.InitializeAsync();
+        
+        if (AuthService.IsAuthenticated)
+        {
+            // Already logged in, redirect to home
+            Navigation.NavigateTo("/");
+        }
+    }
+
     private void TogglePassword() => ShowPassword = !ShowPassword;
 
     private async Task HandleLogin()
@@ -199,11 +214,15 @@
 
             if (result != null)
             {
+                // Login successful, navigate to home
                 Navigation.NavigateTo("/");
+                ToastService.ShowSuccess($"Chào mừng bạn trở lại FreshMart !", "Đăng nhập thành công");
+
             }
             else
             {
-                ErrorMessage = "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.";
+                ErrorMessage = "Vui lòng kiểm tra lại thông tin.";
+                ToastService.ShowError(ErrorMessage, "Đăng nhập thất bại");
             }
         }
         catch (Exception ex)
