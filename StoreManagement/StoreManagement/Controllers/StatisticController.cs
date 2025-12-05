@@ -18,19 +18,38 @@ public class StatisticController : ControllerBase
         _statisticService = statisticService;
     }
 
-    [HttpGet("daily")]
-    [ProducesDefaultResponseType(typeof(Response<object>))]
-    public async Task<IActionResult> GetDailyRevenue()
+    [HttpGet("/revenue")]
+    [ProducesDefaultResponseType(typeof(Response<IEnumerable<RevenueResponse>>))]
+    public async Task<IActionResult> GetDailyRevenue(
+            [FromQuery] int year ,
+            [FromQuery] int? month,
+            [FromQuery] int? day
+    )
     {
         try
         {
-            var result = await _statisticService.GetDailyRevenueAsync();
-            var response = new Response<List<DailyRevenueResponse>>("Get Daily Revenue Successfully !", result);
+            var result = await _statisticService.GetRevenueAsync(year, month, day);
+            var response = new Response<IEnumerable<RevenueResponse>>("Get Revenue Successfully !", result);
 
             return Ok(response);
         }
         catch (Exception ex)
         {
+            return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+        }
+    }
+
+    [HttpGet("top-seller/{top:int}")]
+    [ProducesDefaultResponseType(typeof(Response<IEnumerable<TopSellerProductResponse>>))]
+    public async Task<IActionResult> GetTopSellerProduct(int top = 5)
+    {
+        try
+        {
+            var result = await _statisticService.GetTopProduct(top);
+            var response = new Response<IEnumerable<TopSellerProductResponse>>("Get top-seller products Successfully !", result);
+            return Ok(response);
+        }
+        catch (Exception ex) {
             return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
         }
     }

@@ -7,7 +7,7 @@ namespace StoreManagement.Services.Impl
 {
     public class StatisticService : IStatisticService
     {
-        private readonly ProductMapper _productMapper = new ProductMapper();
+        //private readonly ProductMapper _productMapper = new ProductMapper();
 
         private readonly IStatisticRepository _statisticRepository;
 
@@ -15,15 +15,26 @@ namespace StoreManagement.Services.Impl
         {
             _statisticRepository = statisticRepository;
         }
-        public Task<List<DailyRevenueResponse>> GetDailyRevenueAsync()
+        public async Task<IEnumerable<RevenueResponse>> GetRevenueAsync(int year , int? month , int? day)
         {
-            return _statisticRepository.GetDailyRevenueAsync();
+            if (month.HasValue && day.HasValue)
+            {
+                var dailyRevenue = await _statisticRepository.GetDailyRevenueByDateAsync(year, month.Value, day.Value);
+                return dailyRevenue is not null ? new List<RevenueResponse> { dailyRevenue } : Enumerable.Empty<RevenueResponse>();
+            }
+            else if (month.HasValue)
+            {
+                return await _statisticRepository.GetMonthlyRevenueAsync(month.Value, year);
+            }
+            else
+            {
+                return await _statisticRepository.GetYearlyRevenueAsync(year);
+            }
         }
 
-        //public Task<IEnumerable<ProductResponse>> GetTopProduct()
-        //{
-        //    var listEntity = _statisticRepository.GetTopProduct();
-        //    return _productMapper.ToDtoList(listEntity);
-        //}
+        public async Task<IEnumerable<TopSellerProductResponse>> GetTopProduct(int top )
+        {
+            return await _statisticRepository.GetTopProduct(top);
+        }
     }
 }

@@ -13,8 +13,9 @@ public class StoreManagementDbContext : DbContext
     }
 
     //statistic 
-    public DbSet<DailyRevenueResponse> DailyRevenueResponses { get; set; }
-
+    public DbSet<RevenueResponse> RevenueResponses { get; set; }
+    public DbSet<TopSellerProductResponse> TopSellerProductResponses { get; set; }
+    //
     public DbSet<User> Users { get; set; }
     public DbSet<Customer> Customers { get; set; }
     public DbSet<Category> Categories { get; set; }
@@ -99,7 +100,8 @@ public class StoreManagementDbContext : DbContext
             .WithMany(o => o.Payments)
             .HasForeignKey(p => p.OrderId)
             .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<DailyRevenueResponse>().HasNoKey().ToView(null);
+        //statistic no key
+        modelBuilder.Entity<RevenueResponse>().HasNoKey().ToView(null);
+        modelBuilder.Entity<TopSellerProductResponse>().HasNoKey().ToView(null);
     }
 }
