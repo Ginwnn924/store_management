@@ -40,7 +40,20 @@ namespace StoreManagement.Mapper
                 Name = dto.Name,
                 Phone = dto.Phone,
                 Email = dto.Email,
-                Address = dto.Address
+                Address = dto.Address,
+                //Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+            };
+        }
+
+        public Customer ToModel(CustomerRegisterRequest dto)
+        {
+            return new Customer
+            {
+                Name = dto.Name,
+                Phone = dto.Phone,
+                Email = dto.Email,
+                Address = dto.Address,
+                Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             };
         }
 

@@ -9,4 +9,6 @@ public interface IAuthService
 {
     Task<LoginResponse> LoginAsync(LoginRequest dto);
     Task LogoutAsync(string jwtToken);
+
+    Task<CustomerLoginResponse> CustomerLoginAsync(CustomerLoginRequest loginRequest);
 }
