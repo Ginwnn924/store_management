@@ -18,7 +18,7 @@ public class StatisticController : ControllerBase
         _statisticService = statisticService;
     }
 
-    [HttpGet("/revenue")]
+    [HttpGet("revenue")]
     [ProducesDefaultResponseType(typeof(Response<IEnumerable<RevenueResponse>>))]
     public async Task<IActionResult> GetDailyRevenue(
             [FromQuery] int year ,
