@@ -35,7 +35,7 @@ builder.Services.AddSingleton<IVnpay, Vnpay>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<ICloudStorageService, CloudinaryService>();
-
+builder.Services.AddScoped<IStatisticService, StatisticService>();
 // Ioc Repository
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
@@ -48,7 +48,7 @@ builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("Cloudinary"));
-
+builder.Services.AddScoped<IStatisticRepository, StatisticRepository>();
 // Configure MySQL with EF Core
 var connectionString = builder.Configuration.GetConnectionString("MySql");
 builder.Services.AddDbContext<StoreManagementDbContext>(options =>

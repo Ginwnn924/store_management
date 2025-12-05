@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using StoreManagement.DTOs.Response.StatisticResponse;
 using StoreManagement.Models;
+using System.Security.Cryptography.Xml;
 
 namespace StoreManagement.Data;
 
@@ -9,6 +11,9 @@ public class StoreManagementDbContext : DbContext
         : base(options)
     {
     }
+
+    //statistic 
+    public DbSet<DailyRevenueResponse> DailyRevenueResponses { get; set; }
 
     public DbSet<User> Users { get; set; }
     public DbSet<Customer> Customers { get; set; }
@@ -94,5 +99,7 @@ public class StoreManagementDbContext : DbContext
             .WithMany(o => o.Payments)
             .HasForeignKey(p => p.OrderId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DailyRevenueResponse>().HasNoKey().ToView(null);
     }
 }
