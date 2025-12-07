@@ -232,6 +232,7 @@
         // Nếu đã đăng nhập, chuyển sang trang checkout
         NavigationManager.NavigateTo("/checkout");
         isProcessing = false;
+        Close();
     }
 
     private void HideSuccessModal()

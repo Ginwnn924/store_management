@@ -1,6 +1,7 @@
 ﻿@page "/checkout"
 @rendermode InteractiveServer
 @using BlazorApp.Services
+@using Microsoft.AspNetCore.Components.Forms
 @inject IAuthService AuthService
 @inject ICartService CartService
 @inject NavigationManager Navigation
@@ -26,7 +27,7 @@ else
             <div><b>Địa chỉ:</b> @AuthService.CurrentUser.Address</div>
         </div>
         <div class="mb-6 p-4 bg-gray-50 rounded-xl border">
-            <h2 class="font-semibold mb-2">Tóm tắt đơn hàng</h2>
+            <h2 class="font-semibold mb-2">Thông tin đơn hàng</h2>
             <table class="min-w-full border mb-2">
                 <thead>
                     <tr class="bg-gray-100">
@@ -52,6 +53,27 @@ else
                 Tổng cộng: <span class="ml-2 text-primary-600">@CartService.TotalPrice.ToString("N0") đ</span>
             </div>
         </div>
+
+      <div class="mb-6 p-4 bg-gray-50 rounded-xl border">
+        <h2 class="font-semibold mb-2">Phương thức thanh toán</h2>
+        <div class="space-y-2">
+            <InputRadioGroup class="space-y-2" @bind-Value="selectedPayment">
+                <label class="flex items-center gap-3">
+                        <InputRadio class="w-4 h-4" Value="PaymentMethod.cash" />
+                    <span class="ml-2">Tiền mặt</span>
+                </label>
+                <label class="flex items-center gap-3">
+                        <InputRadio class="w-4 h-4" Value="PaymentMethod.bank_transfer" />
+                    <span class="ml-2">Ngân hàng</span>
+                </label>
+                <label class="flex items-center gap-3">
+                    <InputRadio class="w-4 h-4" Value="PaymentMethod.card" />
+                    <span class="ml-2">Thẻ</span>
+                </label>
+            </InputRadioGroup>
+        </div>
+       </div>  
+
         <button class="w-full py-3 rounded-xl bg-primary-500 text-white font-bold hover:bg-primary-600 transition"
                 @onclick="OnPlaceOrder">
             Xác nhận thanh toán
@@ -60,7 +82,9 @@ else
 }
 
 @code {
+    
     private bool _initialized = false;
+    private PaymentMethod selectedPayment { get; set; } = PaymentMethod.cash;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -100,7 +124,7 @@ else
             customerId = 1,
             userId = 1,
             date = DateTime.UtcNow,
-            paymentMethod = 0,
+            paymentMethod = (int)selectedPayment,
             totalAmount = CartService.TotalPrice,
             discountAmount = 0,
             orderStatus = 0,
@@ -124,5 +148,11 @@ else
         {
             ToastService.ShowError("Thanh toán lỗi!", "Thông báo");
         }
+    }
+    public enum PaymentMethod
+    {
+        cash,
+        bank_transfer,
+        card
     }
 }

@@ -112,13 +112,23 @@ namespace StoreManagement.Services.Impl
             {
                 request.OrderStatus = Enum.OrderStatus.paid;
                 Order newOrder = _orderMapper.ToModel(request);
-                newOrder.Status = Enum.OrderStatus.pending.ToString();
+                newOrder.Status = Enum.OrderStatus.paid.ToString();
                 createdOrder = await _orderRepository.AddAsync(newOrder);
             }
+            
+           
             if (createdOrder == null)
             {
                 throw new Exception("Order creation failed");
             }
+            Payment payment = new Payment()
+            {
+                OrderId = createdOrder.OrderId,
+                Amount = createdOrder.TotalAmount - createdOrder.DiscountAmount,
+                PaymentDate = DateTime.Now,
+                PaymentMethod = PaymentMethod.cash.ToString(),
+            };
+            await _paymentRepository.AddAsync(payment);
 
             var orderWithProduct = await _orderRepository.GetQueryable()
                 .FirstOrDefaultAsync(o => o.OrderId == createdOrder.OrderId);
