@@ -41,12 +41,75 @@ public class AuthService : IAuthService
 
         return new LoginResponse { Token = token, Username = user.Username, Role = user.Role };
     }
+
+    //login for cusomter 
+
+    public async Task<CustomerLoginResponse> CustomerLoginAsync(CustomerLoginRequest loginRequest)
+    {
+        Customer? customer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == loginRequest.Email)
+             ?? throw new NotFoundException("Không tìm thấy khách hàng");
+        // Verify password
+        if (!BCrypt.Net.BCrypt.Verify(loginRequest.Password, customer.Password))
+        {
+            throw new VerifyException("Invalid username or password"); // can have better way than the exception
+        }
+        var token = GenerateJwtCustomerToken(new Customer
+        {
+            CustomerId = customer.CustomerId,
+            Email = customer.Email,
+            Name = customer.Name,
+            Phone = customer.Phone,
+            Address = customer.Address
+        });
+        string cacheKey = "jwt:" + token;
+        await _redisCacheService.SetCacheAsync(cacheKey, "active", TimeSpan.FromDays(2));
+        if(customer.Email == null)
+        {
+            throw new NotFoundException("customer email not found");
+        }
+        return new CustomerLoginResponse { Token = token, Email = customer.Email};
+    }
+
     public async Task LogoutAsync(string jwtToken)
     {
 
         string cacheKey = "jwt:" + jwtToken;
         await _redisCacheService.RemoveCacheAsync(cacheKey);
     }
+
+    private string GenerateJwtCustomerToken(Customer customer)
+    {
+        if ( customer == null )
+        {
+            throw new NotFoundException("cusomter not found");
+        }
+        if ( customer.Email == null )
+        {
+            throw new NotFoundException("customer email not found");
+        }
+        var jwtSettings = _configuration.GetSection("JwtSettings");
+        var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
+        var issuer = jwtSettings["Issuer"] ?? "StoreManagement";
+        var audience = jwtSettings["Audience"] ?? "StoreManagementAPI";
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, customer.CustomerId.ToString()),
+            new Claim(ClaimTypes.Email ,customer.Email! ),
+        };
+        var token = new JwtSecurityToken(
+            issuer: issuer,
+            audience: audience,
+            claims: claims,
+            expires: DateTime.UtcNow.AddHours(24),
+            signingCredentials: credentials
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
 
     private string GenerateJwtToken(User user)
     {

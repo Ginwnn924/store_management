@@ -85,6 +85,33 @@ namespace StoreManagement.Services.Impl
             return customerResponse;
         }
 
+        public async Task<CustomerResponse> Register(CustomerRegisterRequest request)
+        {
+            if (!string.IsNullOrEmpty(request.Email))
+            {
+                var existingCustomer = await _customerRepository.GetCustomerByEmailAsync(request.Email);
+                if (existingCustomer != null)
+                {
+                    throw new DuplicateException("A customer with this email already exists");
+                }
+            }
+            // Check if phone already exists
+            if (!string.IsNullOrEmpty(request.Phone))
+            {
+                var existingCustomer = await _customerRepository.GetCustomerByPhoneAsync(request.Phone);
+                if (existingCustomer != null)
+                {
+                    throw new DuplicateException("A customer with this phone already exists");
+                }
+            }
+            var customer = _customerMapper.ToModel(request);
+            var createdCustomer = await _customerRepository.AddAsync(customer);
+            var response = await _customerRepository.GetByIdAsync(createdCustomer.CustomerId);
+            var customerResponse = _customerMapper.ToDto(response);
+
+            return customerResponse;
+        }
+
         public async Task<CustomerResponse> UpdateCustomerAsync(CustomerCreateRequest request, int id)
         {
             // Check if email already exists for a different customer
