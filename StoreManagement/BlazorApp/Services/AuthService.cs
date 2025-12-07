@@ -81,7 +81,7 @@ public class AuthService : IAuthService
     {
         try
         {
-            // Map BlazorApp RegisterRequest sang DTO ð? g?i API
+            // Map BlazorApp RegisterRequest sang DTO ?? g?i API
             // API endpoint expects: { name, phone, email, address, password }
             var customerRequest = new
             {
@@ -168,6 +168,12 @@ public class AuthService : IAuthService
                 // Trigger event to notify UI
                 OnAuthStateChanged?.Invoke();
             }
+        }
+        catch (InvalidOperationException)
+        {
+            // JS interop not available during prerendering — skip initialization silently.
+            _logger.LogDebug("JS interop not available during prerender; skipping auth initialization for now.");
+            return;
         }
         catch (Exception ex)
         {

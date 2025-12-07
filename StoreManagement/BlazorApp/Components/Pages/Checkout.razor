@@ -1,0 +1,100 @@
+﻿@page "/checkout"
+@rendermode InteractiveServer
+@using BlazorApp.Services
+@inject IAuthService AuthService
+@inject ICartService CartService
+@inject NavigationManager Navigation
+@inject IToastService ToastService
+
+<PageTitle>Thanh toán</PageTitle>
+
+@if (!AuthService.IsAuthenticated || AuthService.CurrentUser == null)
+{
+    <div class="text-center py-12">
+        <p>Bạn chưa đăng nhập. Đang chuyển hướng...</p>
+    </div>
+}
+else
+{
+    <div class="max-w-2xl mx-auto py-8">
+        <h1 class="text-2xl font-bold mb-4">Xác nhận thanh toán</h1>
+        <div class="mb-6 p-4 bg-gray-50 rounded-xl border">
+            <h2 class="font-semibold mb-2">Thông tin khách hàng</h2>
+            <div><b>Tên:</b> @AuthService.CurrentUser.Name</div>
+            <div><b>Email:</b> @AuthService.CurrentUser.Email</div>
+            <div><b>Địa chỉ:</b> @AuthService.CurrentUser.Address</div>
+        </div>
+        <div class="mb-6 p-4 bg-gray-50 rounded-xl border">
+            <h2 class="font-semibold mb-2">Tóm tắt đơn hàng</h2>
+            <table class="min-w-full border mb-2">
+                <thead>
+                    <tr class="bg-gray-100">
+                        <th class="px-3 py-2 text-left">Sản phẩm</th>
+                        <th class="px-3 py-2 text-center">SL</th>
+                        <th class="px-3 py-2 text-right">Giá</th>
+                        <th class="px-3 py-2 text-right">Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in CartService.Items)
+                    {
+                        <tr>
+                            <td class="px-3 py-2">@item.Name</td>
+                            <td class="px-3 py-2 text-center">@item.Quantity</td>
+                            <td class="px-3 py-2 text-right">@item.Price.ToString("N0") đ</td>
+                            <td class="px-3 py-2 text-right">@((item.Price * item.Quantity).ToString("N0")) đ</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <div class="flex justify-end font-bold">
+                Tổng cộng: <span class="ml-2 text-primary-600">@CartService.TotalPrice.ToString("N0") đ</span>
+            </div>
+        </div>
+        <button class="w-full py-3 rounded-xl bg-primary-500 text-white font-bold hover:bg-primary-600 transition"
+                @onclick="OnPlaceOrder">
+            Xác nhận thanh toán
+        </button>
+    </div>
+}
+
+@code {
+    private bool _initialized = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_initialized)
+        {
+            _initialized = true;
+            try
+            {
+                await AuthService.InitializeAsync();
+
+                if (!AuthService.IsAuthenticated || AuthService.CurrentUser == null)
+                {
+                    // chuyển hướng đến trang đăng nhập nếu chưa đăng nhập
+                    Navigation.NavigateTo("/login");
+                }
+                else
+                {
+                    // ensure UI updates with loaded user
+                    StateHasChanged();
+                }
+            }
+            catch
+            {
+                // ignore initialization errors during prerender or runtime
+            }
+        }
+    }
+
+    private async Task OnPlaceOrder()
+    {
+        // Placeholder: Xử lý đơn hàng ở đây (gọi API, lưu DB, ...)
+        await Task.Delay(500); // giả lập xử lý
+
+        await CartService.ClearAsync();
+        ToastService.ShowSuccess("Đặt hàng thành công!", "Thông báo");
+        Navigation.NavigateTo("/");
+    }
+}

@@ -7,6 +7,9 @@
 @implements IDisposable
 @inject ILogger<CartDrawer> Logger
 
+@using BlazorApp.Models.Auth
+@inject IAuthService AuthService
+
 @if (IsOpen)
 {
     <!-- Overlay Background -->
@@ -213,44 +216,21 @@
 
     private async Task OnCheckoutAsync()
     {
-        int count = 0; 
         if (CartService.Items.Count == 0 || isProcessing)
             return;
-        count += 1;
-        Logger.LogInformation($"Giá trị mới của count là: {count}");
+
         isProcessing = true;
 
-        var orderRequest = new
+        // Kiểm tra đăng nhập
+        if (!AuthService.IsAuthenticated)
         {
-            customerId = 1,
-            userId = 1,
-            date = DateTime.UtcNow,
-            paymentMethod = 0,
-            totalAmount = CartService.TotalPrice,
-            discountAmount = 0,
-            orderStatus = 0,
-            listItems = CartService.Items.Select(item => new
-            {
-                productId = item.ProductId,
-                quantity = item.Quantity,
-                price = item.Price
-            }).ToList()
-        };
-        Logger.LogInformation("thong tin don hang: {@orderRequest}", orderRequest);
-
-        var orderResponse = await OrderService.CreateOrderAsync(orderRequest);
-
-        if (orderResponse != null)
-        {
-            await CartService.ClearAsync();
-            orderSuccess = orderResponse;
-            showSuccessModal = true;
+            NavigationManager.NavigateTo("/login", true);
+            isProcessing = false;
+            return;
         }
-        else
-        {
-            Logger.LogInformation("Không thanh toán được");
-        }
-
+        Logger.LogInformation("User is authenticated, proceeding to checkout.");
+        // Nếu đã đăng nhập, chuyển sang trang checkout
+        NavigationManager.NavigateTo("/checkout");
         isProcessing = false;
     }
 
