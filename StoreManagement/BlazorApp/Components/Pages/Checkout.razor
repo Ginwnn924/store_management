@@ -5,6 +5,7 @@
 @inject ICartService CartService
 @inject NavigationManager Navigation
 @inject IToastService ToastService
+@inject IOrderService OrderService
 
 <PageTitle>Thanh toán</PageTitle>
 
@@ -90,11 +91,38 @@ else
 
     private async Task OnPlaceOrder()
     {
-        // Placeholder: Xử lý đơn hàng ở đây (gọi API, lưu DB, ...)
-        await Task.Delay(500); // giả lập xử lý
 
-        await CartService.ClearAsync();
-        ToastService.ShowSuccess("Đặt hàng thành công!", "Thông báo");
-        Navigation.NavigateTo("/");
+        await Task.Delay(500); // giả lập xử lý
+        if (CartService.Items.Count == 0)
+            return;
+        var orderRequest = new
+        {
+            customerId = 1,
+            userId = 1,
+            date = DateTime.UtcNow,
+            paymentMethod = 0,
+            totalAmount = CartService.TotalPrice,
+            discountAmount = 0,
+            orderStatus = 0,
+            listItems = CartService.Items.Select(item => new
+            {
+                productId = item.ProductId,
+                quantity = item.Quantity,
+                price = item.Price
+            }).ToList()
+        };
+
+        var orderResponse = await OrderService.CreateOrderAsync(orderRequest);
+
+        if (orderResponse != null)
+        {
+            await CartService.ClearAsync();
+            ToastService.ShowSuccess("Thanh toán thành công!", "Thông báo");
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            ToastService.ShowError("Thanh toán lỗi!", "Thông báo");
+        }
     }
 }
