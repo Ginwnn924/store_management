@@ -2,7 +2,10 @@
 @using BlazorApp.Services
 @using BlazorApp.Models
 @inject ICartService CartService
+@inject IOrderService OrderService
+@inject NavigationManager NavigationManager
 @implements IDisposable
+@inject ILogger<CartDrawer> Logger
 
 @if (IsOpen)
 {
@@ -86,7 +89,8 @@
                             </div>
 
                             <!-- Price -->
-                            <span class="font-bold text-primary-600 text-sm">@FormatPrice(item.Price * item.Quantity)</span>
+                            <span class="font-bold text-primary-600 text-sm">@FormatPrice(item.Price * item.Quantity)
+                            </span>
                         </div>
                     </div>
 
@@ -136,7 +140,9 @@
 
             <!-- Checkout Button -->
             <button
-                class="w-full py-4 rounded-2xl bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold hover:from-primary-600 hover:to-primary-700 transition-all shadow-lg shadow-primary-500/30 flex items-center justify-center gap-2">
+                class="w-full py-4 rounded-2xl bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold hover:from-primary-600 hover:to-primary-700 transition-all shadow-lg shadow-primary-500/30 flex items-center justify-center gap-2"
+                @onclick="OnCheckoutAsync"
+                disabled="@isProcessing">
                 <span>Thanh toán</span>
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -152,12 +158,17 @@
     }
 </aside>
 
+<OrderSuccessModal Show="@showSuccessModal" Order="@orderSuccess" OnClose="HideSuccessModal" />
+
 @code {
     [Parameter]
     public bool IsOpen { get; set; }
 
     [Parameter]
     public EventCallback<bool> IsOpenChanged { get; set; }
+
+    private bool showSuccessModal = false;
+    private OrderResponse? orderSuccess;
 
     protected override async Task OnInitializedAsync()
     {
@@ -197,4 +208,54 @@
     }
 
     private static string FormatPrice(decimal price) => $"{price:N0}đ";
+
+    private bool isProcessing = false;
+
+    private async Task OnCheckoutAsync()
+    {
+        int count = 0; 
+        if (CartService.Items.Count == 0 || isProcessing)
+            return;
+        count += 1;
+        Logger.LogInformation($"Giá trị mới của count là: {count}");
+        isProcessing = true;
+
+        var orderRequest = new
+        {
+            customerId = 1,
+            userId = 1,
+            date = DateTime.UtcNow,
+            paymentMethod = 0,
+            totalAmount = CartService.TotalPrice,
+            discountAmount = 0,
+            orderStatus = 0,
+            listItems = CartService.Items.Select(item => new
+            {
+                productId = item.ProductId,
+                quantity = item.Quantity,
+                price = item.Price
+            }).ToList()
+        };
+        Logger.LogInformation("thong tin don hang: {@orderRequest}", orderRequest);
+
+        var orderResponse = await OrderService.CreateOrderAsync(orderRequest);
+
+        if (orderResponse != null)
+        {
+            await CartService.ClearAsync();
+            orderSuccess = orderResponse;
+            showSuccessModal = true;
+        }
+        else
+        {
+            Logger.LogInformation("Không thanh toán được");
+        }
+
+        isProcessing = false;
+    }
+
+    private void HideSuccessModal()
+    {
+        showSuccessModal = false;
+    }
 }

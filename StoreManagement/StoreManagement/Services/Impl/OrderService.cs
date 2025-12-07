@@ -11,6 +11,7 @@ using Order = StoreManagement.Models.Order;
 using VNPAY.NET;
 using VNPAY.NET.Enums;
 using VNPAY.NET.Models;
+using Microsoft.Extensions.Logging;
 
 namespace StoreManagement.Services.Impl
 {
@@ -67,9 +68,16 @@ namespace StoreManagement.Services.Impl
             return pagedResponse;
         }
 
-        public Task<OrderResponse> GetOrderById(int id)
+        public async Task<OrderResponse> GetOrderById(int id)
         {
-            throw new NotImplementedException();
+            // Ensure includes for User, Customer, OrderItems, Product
+            var order = await _orderRepository.GetQueryable()
+                .FirstOrDefaultAsync(o => o.OrderId == id);
+            if (order == null)
+            {
+                throw new Exception($"Order with id {id} not found");
+            }
+            return _orderMapper.ToDto(order);
         }
 
         public async Task<IEnumerable<OrderResponse>> GetOrders()
@@ -111,7 +119,14 @@ namespace StoreManagement.Services.Impl
             {
                 throw new Exception("Order creation failed");
             }
-            OrderResponse createdOrderResponse = _orderMapper.ToDto(createdOrder);
+
+            var orderWithProduct = await _orderRepository.GetQueryable()
+                .FirstOrDefaultAsync(o => o.OrderId == createdOrder.OrderId);
+
+            if (orderWithProduct == null)
+                throw new Exception("Order not found after creation");
+
+            OrderResponse createdOrderResponse = _orderMapper.ToDto(orderWithProduct);
             return createdOrderResponse;
         }
 
