@@ -15,5 +15,7 @@ namespace StoreManagement.Services
         Task<CustomerResponse> GetCustomerByEmailAsync(string email);
         Task<CustomerResponse> GetCustomerByPhoneAsync(string phone);
         Task<IEnumerable<CustomerResponse>> SearchCustomersByNameAsync(string name);
+
+        Task<CustomerResponse> Register(CustomerRegisterRequest request);
     }
 }
