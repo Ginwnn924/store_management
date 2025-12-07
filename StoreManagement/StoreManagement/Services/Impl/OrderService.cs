@@ -97,7 +97,7 @@ namespace StoreManagement.Services.Impl
             }
         }
 
-        public async Task<long> CreateOrderOnly(OrderRequest request)
+        public async Task<OrderResponse> CreateOrderReturnOrder(OrderRequest request)
         {
             Order createdOrder = null;
             if (request.PaymentMethod == Enum.PaymentMethod.cash)
@@ -111,7 +111,8 @@ namespace StoreManagement.Services.Impl
             {
                 throw new Exception("Order creation failed");
             }
-            return createdOrder.OrderId;
+            OrderResponse createdOrderResponse = _orderMapper.ToDto(createdOrder);
+            return createdOrderResponse;
         }
 
 
