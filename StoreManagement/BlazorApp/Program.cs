@@ -1,5 +1,6 @@
 using BlazorApp.Components;
 using BlazorApp.Services;
+using Microsoft.JSInterop;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +21,17 @@ builder.Services.AddHttpClient<ICategoryService, CategoryService>(client =>
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
-builder.Services.AddHttpClient<IAuthService, AuthService>(client =>
+// AuthService - Scoped để share state trong cùng một circuit/session
+builder.Services.AddScoped<IAuthService>(sp =>
+{
+    var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+    var httpClient = httpClientFactory.CreateClient("AuthClient");
+    var logger = sp.GetRequiredService<ILogger<AuthService>>();
+    var jsRuntime = sp.GetRequiredService<IJSRuntime>();
+    return new AuthService(httpClient, logger, jsRuntime);
+});
+
+builder.Services.AddHttpClient("AuthClient", client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5163");
     client.Timeout = TimeSpan.FromSeconds(30);
