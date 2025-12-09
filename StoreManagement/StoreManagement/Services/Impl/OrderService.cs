@@ -22,12 +22,12 @@ namespace StoreManagement.Services.Impl
         private readonly IVnpay _vnpay;
         private readonly IConfiguration _configuration;
         private readonly OrderMapper _orderMapper = new OrderMapper();
-
-        public OrderService(IOrderRepository orderRepository, IPaymentRepository paymentRepository, IVnpay vnPayservice, IConfiguration configuration)
+        private readonly IPromotionRepository _promoRepository;
+        public OrderService(IOrderRepository orderRepository, IPaymentRepository paymentRepository, IVnpay vnPayservice, IConfiguration configuration, IPromotionRepository promoRepository)
         {
             _orderRepository = orderRepository;
             _paymentRepository = paymentRepository;
-
+            _promoRepository = promoRepository;
             _vnpay = vnPayservice;
             _configuration = configuration;
 
@@ -38,6 +38,7 @@ namespace StoreManagement.Services.Impl
             var callbackUrl = _configuration["Vnpay:CallbackUrl"] ?? throw new ArgumentNullException("Vnpay:CallbackUrl");
 
             _vnpay.Initialize(tmnCode, hashSecret, baseUrl, callbackUrl);
+            _promoRepository = promoRepository;
         }
 
 
@@ -129,7 +130,7 @@ namespace StoreManagement.Services.Impl
                 PaymentMethod = PaymentMethod.cash.ToString(),
             };
             await _paymentRepository.AddAsync(payment);
-
+            await _promoRepository.UpdateUsedCountAsync(request.promotionId);
             var orderWithProduct = await _orderRepository.GetQueryable()
                 .FirstOrDefaultAsync(o => o.OrderId == createdOrder.OrderId);
 

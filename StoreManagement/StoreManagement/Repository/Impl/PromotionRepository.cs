@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using CloudinaryDotNet.Actions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using StoreManagement.Data;
 using StoreManagement.DTOs.Response;
@@ -25,6 +26,19 @@ namespace StoreManagement.Repository.Impl
                .Where(p => p.Status == "active")
                //.AsNoTracking()
                .ToListAsync();
+        }
+
+        public async Task<Promotion> UpdateUsedCountAsync(int? id)
+        {
+            var existingEntity = await _dbSet.FindAsync(id);
+            if (existingEntity == null)
+                throw new KeyNotFoundException($"Product with ID {id} not found");
+
+            // Update properties
+            existingEntity.UsedCount++;
+
+            await _context.SaveChangesAsync();
+            return existingEntity;
         }
 
     }
