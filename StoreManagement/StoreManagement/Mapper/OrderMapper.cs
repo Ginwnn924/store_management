@@ -21,7 +21,7 @@ namespace StoreManagement.Mapper
             response.totalAmount = entity.TotalAmount;
             response.discountAmount = entity.DiscountAmount;
             response.orderDate = entity.OrderDate;
-
+            response.status = entity.Status;
             response.listItem = _orderItemMapper.ToDtoList(entity.OrderItems).ToList();
 
             return response;

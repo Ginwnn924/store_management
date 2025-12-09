@@ -43,6 +43,29 @@ public class AuthController : ControllerBase
             return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
         }
     }
+    [HttpPost("customer-login")]
+    [ProducesDefaultResponseType(typeof(Response<AuthResponseDto>))]
+    public async Task<ActionResult> CustomerLogin(CustomerLoginRequest loginDto)
+    {
+        try
+        {
+            var result = await _authService.CustomerLoginAsync(loginDto);
+            var response = new Response<CustomerLoginResponse>("Đăng nhập thành công", result);
+            return Ok(response);
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(SM.Response.OnlyMessage(ex.Message));
+        }
+        catch (VerifyException ex)
+        {
+            return Unauthorized(SM.Response.OnlyMessage(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+        }
+    }
 
     [HttpPost("logout")]
     [ProducesDefaultResponseType(typeof(Response<AuthResponseDto>))]

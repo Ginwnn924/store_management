@@ -109,7 +109,21 @@ public class OrderController : Controller
             return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
         }
     }
-
+    [HttpPost("/api/Order/create-order-with-data-response")]
+    [ProducesDefaultResponseType(typeof(Response<object>))]
+    public async Task<IActionResult> CreateOrderReturnOrder([FromBody] OrderRequest request)
+    {
+        try
+        {
+            var result = await _orderService.CreateOrderReturnOrder(request);
+            var response = new Response<OrderResponse>("Orders retrieved successfully", result);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return this.InternalServerError(SM.Response.OnlyMessage(ex.Message));
+        }
+    }
 
     [HttpPost("/api/Order/vnpay")]
     [ProducesDefaultResponseType(typeof(Response<OrderRedirectResponse>))]

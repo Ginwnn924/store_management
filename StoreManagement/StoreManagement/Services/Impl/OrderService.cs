@@ -11,6 +11,7 @@ using Order = StoreManagement.Models.Order;
 using VNPAY.NET;
 using VNPAY.NET.Enums;
 using VNPAY.NET.Models;
+using Microsoft.Extensions.Logging;
 
 namespace StoreManagement.Services.Impl
 {
@@ -67,9 +68,16 @@ namespace StoreManagement.Services.Impl
             return pagedResponse;
         }
 
-        public Task<OrderResponse> GetOrderById(int id)
+        public async Task<OrderResponse> GetOrderById(int id)
         {
-            throw new NotImplementedException();
+            // Ensure includes for User, Customer, OrderItems, Product
+            var order = await _orderRepository.GetQueryable()
+                .FirstOrDefaultAsync(o => o.OrderId == id);
+            if (order == null)
+            {
+                throw new Exception($"Order with id {id} not found");
+            }
+            return _orderMapper.ToDto(order);
         }
 
         public async Task<IEnumerable<OrderResponse>> GetOrders()
@@ -97,21 +105,39 @@ namespace StoreManagement.Services.Impl
             }
         }
 
-        public async Task<long> CreateOrderOnly(OrderRequest request)
+        public async Task<OrderResponse> CreateOrderReturnOrder(OrderRequest request)
         {
             Order createdOrder = null;
             if (request.PaymentMethod == Enum.PaymentMethod.cash)
             {
                 request.OrderStatus = Enum.OrderStatus.paid;
                 Order newOrder = _orderMapper.ToModel(request);
-                newOrder.Status = Enum.OrderStatus.pending.ToString();
+                newOrder.Status = Enum.OrderStatus.paid.ToString();
                 createdOrder = await _orderRepository.AddAsync(newOrder);
             }
+            
+           
             if (createdOrder == null)
             {
                 throw new Exception("Order creation failed");
             }
-            return createdOrder.OrderId;
+            Payment payment = new Payment()
+            {
+                OrderId = createdOrder.OrderId,
+                Amount = createdOrder.TotalAmount - createdOrder.DiscountAmount,
+                PaymentDate = DateTime.Now,
+                PaymentMethod = PaymentMethod.cash.ToString(),
+            };
+            await _paymentRepository.AddAsync(payment);
+
+            var orderWithProduct = await _orderRepository.GetQueryable()
+                .FirstOrDefaultAsync(o => o.OrderId == createdOrder.OrderId);
+
+            if (orderWithProduct == null)
+                throw new Exception("Order not found after creation");
+
+            OrderResponse createdOrderResponse = _orderMapper.ToDto(orderWithProduct);
+            return createdOrderResponse;
         }
 
 

@@ -33,4 +33,7 @@ public class Customer
     public bool IsDeleted { get; set; } = false;
 
     public ICollection<Order> Orders { get; set; } = new List<Order>();
+
+    [Column("password")]
+    public string Password { get; set; } = string.Empty;
 }

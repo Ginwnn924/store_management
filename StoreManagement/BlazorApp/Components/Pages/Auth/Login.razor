@@ -189,15 +189,25 @@
     [Inject]
     private IToastService ToastService { get; set; } = default!;
 
-    protected override async Task OnInitializedAsync()
+    private bool _initialized = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        // Check if already logged in
-        await AuthService.InitializeAsync();
-        
-        if (AuthService.IsAuthenticated)
+        if (firstRender && !_initialized)
         {
-            // Already logged in, redirect to home
-            Navigation.NavigateTo("/");
+            _initialized = true;
+            try
+            {
+                await AuthService.InitializeAsync();
+                if (AuthService.IsAuthenticated)
+                {
+                    Navigation.NavigateTo("/");
+                }
+            }
+            catch (Exception ex)
+            {
+                // ignore JS interop errors during prerendering
+            }
         }
     }
 

@@ -22,17 +22,33 @@ public partial class Header : IDisposable
 
     private int CartItemCount => CartService.TotalCount;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
+        // Subscribe to events - don't call JS interop here
         CartService.OnChange += HandleCartChanged;
         AuthService.OnAuthStateChanged += HandleAuthStateChanged;
+    }
 
-        await CartService.InitializeAsync();
-        await AuthService.InitializeAsync();
-        
-        Logger.LogInformation("Header initialized - IsAuthenticated: {IsAuth}, CurrentUser: {CurrentUser}", 
-            AuthService.IsAuthenticated, 
-            AuthService.CurrentUser?.Name ?? "null");
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                await CartService.InitializeAsync();
+                await AuthService.InitializeAsync();
+
+                Logger.LogInformation("Header initialized - IsAuthenticated: {IsAuth}, CurrentUser: {CurrentUser}",
+                    AuthService.IsAuthenticated,
+                    AuthService.CurrentUser?.Name ?? "null");
+
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error during Header OnAfterRenderAsync initialization");
+            }
+        }
     }
 
     private void HandleCartChanged()
@@ -42,8 +58,8 @@ public partial class Header : IDisposable
 
     private void HandleAuthStateChanged()
     {
-        Logger.LogInformation("Auth state changed - IsAuthenticated: {IsAuth}, CurrentUser: {CurrentUser}", 
-            AuthService.IsAuthenticated, 
+        Logger.LogInformation("Auth state changed - IsAuthenticated: {IsAuth}, CurrentUser: {CurrentUser}",
+            AuthService.IsAuthenticated,
             AuthService.CurrentUser?.Name ?? "null");
         InvokeAsync(StateHasChanged);
     }
@@ -60,21 +76,21 @@ public partial class Header : IDisposable
     }
 
     /// <summary>
-    /// L?y tên cu?i cùng t? tên ð?y ð?
-    /// VD: "Nguy?n V? Trung Hýng" => "Hýng"
+    /// L?y t?n cu?i c?ng t? t?n ??y ??
+    /// VD: "Nguy?n V? Trung H?ng" => "H?ng"
     /// </summary>
     private string GetLastName(string? fullName)
     {
         if (string.IsNullOrWhiteSpace(fullName))
             return "B?n";
 
-        // Trim whitespace và split theo space
+        // Trim whitespace v? split theo space
         var parts = fullName.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-        
-        // L?y ph?n t? cu?i cùng
+
+        // L?y ph?n t? cu?i c?ng
         if (parts.Length > 0)
             return parts[^1]; // C# 8.0+ index from end
-        
+
         return "B?n";
     }
 }
