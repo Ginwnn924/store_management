@@ -3,7 +3,7 @@ namespace BlazorApp.Models;
 public class OrderRequest
 {
     public int? CustomerId { get; set; }
-    public int UserId { get; set; }
+    public int? UserId { get; set; }
     public int? promotionId { get; set; }
     public DateTime date { get; set; }
     public int PaymentMethod { get; set; }

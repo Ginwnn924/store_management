@@ -249,7 +249,21 @@ else
                     Price = item.Price
                 }).ToList()
             };
-
+            Console.WriteLine("--- OrderRequest Details ---");
+            Console.WriteLine($"CustomerId: {orderRequest.CustomerId}");
+            Console.WriteLine($"UserId: {orderRequest.UserId}");
+            Console.WriteLine($"promotionId: {orderRequest.promotionId}");
+            Console.WriteLine($"date: {orderRequest.date}");
+            Console.WriteLine($"PaymentMethod: {orderRequest.PaymentMethod}");
+            Console.WriteLine($"totalAmount: {orderRequest.totalAmount}");
+            Console.WriteLine($"discountAmount: {orderRequest.discountAmount}");
+            Console.WriteLine($"OrderStatus: {orderRequest.OrderStatus}");
+            Console.WriteLine($"Total Items: {orderRequest.listItems.Count}");
+            Console.WriteLine("--- List Items ---");
+            foreach (var item in orderRequest.listItems)
+            {
+                Console.WriteLine($"  - ProductId: {item.ProductId}, Quantity: {item.Quantity}, Price: {item.Price}");
+            }
             var orderResponse = await OrderService.CreateOrderAsync(orderRequest);
 
             if (orderResponse != null)
