@@ -1,9 +1,11 @@
 ﻿@page "/checkout"
 @rendermode InteractiveServer
 @using BlazorApp.Services
+@using BlazorApp.Models
 @using Microsoft.AspNetCore.Components.Forms
 @inject IAuthService AuthService
 @inject ICartService CartService
+@inject IPromotionService PromotionService
 @inject NavigationManager Navigation
 @inject IToastService ToastService
 @inject IOrderService OrderService
@@ -18,17 +20,54 @@
 }
 else
 {
-    <div class="max-w-2xl mx-auto py-8">
-        <h1 class="text-2xl font-bold mb-4">Xác nhận thanh toán</h1>
+    <div class="max-w-2xl mx-auto py-8 px-4">
+        <h1 class="text-2xl font-bold mb-6">Xác nhận thanh toán</h1>
+        
+        <!-- Thông tin khách hàng -->
         <div class="mb-6 p-4 bg-gray-50 rounded-xl border">
             <h2 class="font-semibold mb-2">Thông tin khách hàng</h2>
             <div><b>Tên:</b> @AuthService.CurrentUser.Name</div>
             <div><b>Email:</b> @AuthService.CurrentUser.Email</div>
             <div><b>Địa chỉ:</b> @AuthService.CurrentUser.Address</div>
         </div>
+
+        <!-- Chọn khuyến mãi -->
+        @if (_promotions != null && _promotions.Count > 0)
+        {
+            <div class="mb-6 p-4 bg-gray-50 rounded-xl border">
+                <h2 class="font-semibold mb-3">Chọn mã khuyến mãi</h2>
+                <div class="max-h-80 overflow-y-auto space-y-2 -mx-2 px-2">
+                    <!-- None option -->
+                    <button class="w-full p-3 rounded-lg border-2 transition-all text-left @(selectedPromotion == null ? "border-primary-500 bg-primary-100" : "border-gray-300 hover:border-gray-400 bg-gray-100")"
+                            @onclick="() => SelectPromotion(null)">
+                        <div class="text-sm font-semibold text-gray-700">Không dùng khuyến mãi</div>
+                        <div class="text-xs text-gray-500 mt-1">Giá gốc: @CartService.TotalPrice.ToString("N0") đ</div>
+                    </button>
+
+                    <!-- Promotion cards -->
+                    @foreach (var promo in _promotions)
+                    {
+                        <button class="w-full p-3 rounded-lg border-2 transition-all text-left @(selectedPromotion?.PromoId == promo.PromoId ? "border-primary-500 bg-primary-100" : "border-gray-300 hover:border-gray-400 bg-gray-100")"
+                                @onclick="() => SelectPromotion(promo)">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="text-sm font-bold text-primary-600">@promo.PromoCode</div>
+                                    <div class="text-xs text-gray-600 mt-1 line-clamp-2">@promo.Description</div>
+                                </div>
+                                <div class="text-right ml-3">
+                                    <div class="text-lg font-bold text-primary-600">-@promo.DiscountValue@(promo.DiscountType == "percent" ? "%" : "đ")</div>
+                                </div>
+                            </div>
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Thông tin đơn hàng -->
         <div class="mb-6 p-4 bg-gray-50 rounded-xl border">
             <h2 class="font-semibold mb-2">Thông tin đơn hàng</h2>
-            <table class="min-w-full border mb-2">
+            <table class="min-w-full border mb-4">
                 <thead>
                     <tr class="bg-gray-100">
                         <th class="px-3 py-2 text-left">Sản phẩm</th>
@@ -49,41 +88,80 @@ else
                     }
                 </tbody>
             </table>
-            <div class="flex justify-end font-bold">
-                Tổng cộng: <span class="ml-2 text-primary-600">@CartService.TotalPrice.ToString("N0") đ</span>
+            
+            <!-- Khuyến mãi -->
+            @if (selectedPromotion != null)
+            {
+                <div class="mb-3 p-3 bg-primary-100 rounded-lg border border-primary-300">
+                    <div class="text-sm text-primary-700">
+                        <b>Khuyến mãi:</b> @selectedPromotion.PromoCode - 
+                        <span class="text-primary-600 font-bold">
+                            -@selectedPromotion.DiscountValue@(selectedPromotion.DiscountType == "percent" ? "%" : "đ")
+                        </span>
+                    </div>
+                </div>
+            }
+
+            <div class="flex justify-end font-bold text-lg">
+                Tổng cộng: 
+                <span class="ml-2 text-primary-600">
+                    @if (selectedPromotion != null)
+                    {
+                        var discountAmount = selectedPromotion.DiscountType == "percent" 
+                            ? (CartService.TotalPrice * selectedPromotion.DiscountValue / 100) 
+                            : selectedPromotion.DiscountValue;
+                        var finalPrice = CartService.TotalPrice - discountAmount;
+                        <span>@finalPrice.ToString("N0") đ</span>
+                    }
+                    else
+                    {
+                        <span>@CartService.TotalPrice.ToString("N0") đ</span>
+                    }
+                </span>
             </div>
         </div>
 
-      <div class="mb-6 p-4 bg-gray-50 rounded-xl border">
-        <h2 class="font-semibold mb-2">Phương thức thanh toán</h2>
-        <div class="space-y-2">
-            <InputRadioGroup class="space-y-2" @bind-Value="selectedPayment">
-                <label class="flex items-center gap-3">
+        <!-- Phương thức thanh toán -->
+        <div class="mb-6 p-4 bg-gray-50 rounded-xl border">
+            <h2 class="font-semibold mb-2">Phương thức thanh toán</h2>
+            <div class="space-y-2">
+                <InputRadioGroup class="space-y-2" @bind-Value="selectedPayment">
+                    <label class="flex items-center gap-3">
                         <InputRadio class="w-4 h-4" Value="PaymentMethod.cash" />
-                    <span class="ml-2">Tiền mặt</span>
-                </label>
-                <label class="flex items-center gap-3">
+                        <span class="ml-2">Tiền mặt</span>
+                    </label>
+                    <label class="flex items-center gap-3">
                         <InputRadio class="w-4 h-4" Value="PaymentMethod.bank_transfer" />
-                    <span class="ml-2">Ngân hàng</span>
-                </label>
-                <label class="flex items-center gap-3">
-                    <InputRadio class="w-4 h-4" Value="PaymentMethod.card" />
-                    <span class="ml-2">Thẻ</span>
-                </label>
-            </InputRadioGroup>
+                        <span class="ml-2">Ngân hàng</span>
+                    </label>
+                    <label class="flex items-center gap-3">
+                        <InputRadio class="w-4 h-4" Value="PaymentMethod.card" />
+                        <span class="ml-2">Thẻ</span>
+                    </label>
+                </InputRadioGroup>
+            </div>
         </div>
-       </div>  
 
-        <button class="w-full py-3 rounded-xl bg-primary-500 text-white font-bold hover:bg-primary-600 transition"
-                @onclick="OnPlaceOrder">
-            Xác nhận thanh toán
+        <button class="w-full py-3 rounded-xl bg-primary-500 text-white font-bold hover:bg-primary-600 transition disabled:opacity-50"
+                @onclick="OnPlaceOrder"
+                disabled="@(_isLoading || CartService.Items.Count == 0)">
+            @if (_isLoading)
+            {
+                <span>Đang xử lý...</span>
+            }
+            else
+            {
+                <span>Xác nhận thanh toán</span>
+            }
         </button>
     </div>
 }
 
 @code {
-    
     private bool _initialized = false;
+    private bool _isLoading = false;
+    private List<PromotionResponse>? _promotions;
+    private PromotionResponse? selectedPromotion;
     private PaymentMethod selectedPayment { get; set; } = PaymentMethod.cash;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -97,58 +175,105 @@ else
 
                 if (!AuthService.IsAuthenticated || AuthService.CurrentUser == null)
                 {
-                    // chuyển hướng đến trang đăng nhập nếu chưa đăng nhập
                     Navigation.NavigateTo("/login");
                 }
                 else
                 {
-                    // ensure UI updates with loaded user
+                    // Load promotions
+                    await LoadPromotions();
                     StateHasChanged();
                 }
             }
             catch
             {
-                // ignore initialization errors during prerender or runtime
+                // ignore initialization errors
             }
         }
     }
 
-    private async Task OnPlaceOrder()
+    private async Task LoadPromotions()
     {
-
-        await Task.Delay(500); // giả lập xử lý
-        if (CartService.Items.Count == 0)
-            return;
-        var orderRequest = new
+        try
         {
-            customerId = 1,
-            userId = 1,
-            date = DateTime.UtcNow,
-            paymentMethod = (int)selectedPayment,
-            totalAmount = CartService.TotalPrice,
-            discountAmount = 0,
-            orderStatus = 0,
-            listItems = CartService.Items.Select(item => new
-            {
-                productId = item.ProductId,
-                quantity = item.Quantity,
-                price = item.Price
-            }).ToList()
-        };
-
-        var orderResponse = await OrderService.CreateOrderAsync(orderRequest);
-
-        if (orderResponse != null)
-        {
-            await CartService.ClearAsync();
-            ToastService.ShowSuccess("Thanh toán thành công!", "Thông báo");
-            Navigation.NavigateTo("/");
+            _promotions = await PromotionService.GetPromotionsAsync((long)CartService.TotalPrice);
         }
-        else
+        catch
         {
-            ToastService.ShowError("Thanh toán lỗi!", "Thông báo");
+            _promotions = new List<PromotionResponse>();
+            ToastService.ShowWarning("Không thể tải khuyến mãi", "Thông báo");
         }
     }
+
+    private void SelectPromotion(PromotionResponse? promotion)
+    {
+        selectedPromotion = promotion;
+        StateHasChanged();
+    }
+
+    private async Task OnPlaceOrder()
+    {
+        if (CartService.Items.Count == 0)
+        {
+            ToastService.ShowError("Giỏ hàng trống!", "Lỗi");
+            return;
+        }
+
+        _isLoading = true;
+
+        try
+        {
+            // Calculate discount
+            decimal discountAmountDecimal = 0;
+            if (selectedPromotion != null)
+            {
+                discountAmountDecimal = selectedPromotion.DiscountType == "percent"
+                    ? (CartService.TotalPrice * selectedPromotion.DiscountValue / 100)
+                    : selectedPromotion.DiscountValue;
+            }
+
+            // Create proper DTO matching backend OrderRequest
+            var orderRequest = new OrderRequest
+            {
+                CustomerId = AuthService.CurrentUser?.CustomerId,
+                UserId = 1,
+                promotionId = selectedPromotion?.PromoId,
+                date = DateTime.UtcNow,
+                PaymentMethod = (int)selectedPayment,
+                totalAmount = (long)CartService.TotalPrice,
+                discountAmount = (long)discountAmountDecimal,
+                OrderStatus = 0, // pending
+                listItems = CartService.Items.Select(item => new OrderItemRequest
+                {
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity,
+                    Price = item.Price
+                }).ToList()
+            };
+
+            var orderResponse = await OrderService.CreateOrderAsync(orderRequest);
+
+            if (orderResponse != null)
+            {
+                await CartService.ClearAsync();
+                ToastService.ShowSuccess("Thanh toán thành công!", "✅ Thành công");
+                await Task.Delay(300);
+                Navigation.NavigateTo("/");
+            }
+            else
+            {
+                ToastService.ShowError("Thanh toán lỗi!", "❌ Lỗi");
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"Lỗi: {ex.Message}", "⚠️ Lỗi");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
     public enum PaymentMethod
     {
         cash,

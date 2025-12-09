@@ -43,6 +43,12 @@ builder.Services.AddHttpClient<IOrderService, OrderService>(client =>
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
+builder.Services.AddHttpClient<IPromotionService, PromotionService>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5163");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
 // Cart Service - Scoped để mỗi user có cart riêng
 builder.Services.AddScoped<ICartService, CartService>();
 

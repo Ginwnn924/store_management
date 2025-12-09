@@ -36,13 +36,14 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<ICloudStorageService, CloudinaryService>();
 builder.Services.AddScoped<IStatisticService, StatisticService>();
+builder.Services.AddScoped<IPromotionService, PromotionService>();
 // Ioc Repository
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
-
+builder.Services.AddScoped<IPromotionRepository, PromotionRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
