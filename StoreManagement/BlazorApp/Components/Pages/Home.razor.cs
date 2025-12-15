@@ -37,14 +37,13 @@ public partial class Home
     private async Task LoadDataAsync()
     {
         ErrorMessage = null;
-        Products = null; // null = loading
+        Products = null;
 
         try
         {
             var (productsResult, categoriesResult) = await FetchDataAsync();
 
             Products = productsResult?.Items ?? [];
-
             // Chỉ load categories lần đầu
             if (Categories == null)
             {
@@ -141,11 +140,29 @@ public partial class Home
         await ApplyFilterAsync();
     }
 
+    // Page size changed from UI
+    private async Task OnPageSizeChanged(ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out var newSize) || newSize <= 0)
+        {
+            return;
+        }
+
+        if (Filter.PageSize == newSize)
+        {
+            return;
+        }
+
+        Filter.PageSize = newSize;
+        Filter.CurrentPage = 1;
+        await ApplyFilterAsync();
+    }
+
     // Filter state object
     public class FilterState
     {
         public int CurrentPage { get; set; } = 1;
-        public int PageSize { get; } = 9;
+        public int PageSize { get; set; } = 9;
         public int TotalPages { get; set; } = 1;
         public int TotalItems { get; set; }
 

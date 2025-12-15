@@ -115,46 +115,12 @@
     </div>
 </section>
 
-<!-- Category Quick Links -->
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="grid grid-cols-4 md:grid-cols-8 gap-4">
-        @if (Categories != null)
-        {
-            foreach (var cat in Categories)
-            {
-                <div class="flex flex-col items-center">
-                    <button 
-                        class="relative group bg-white border border-gray-200 hover:border-primary-500 transition-all rounded-2xl p-4 w-full flex flex-col items-center shadow-md hover:shadow-xl min-h-[120px] mb-2"
-                        style="outline: none;"
-                    >
-                        <div class="flex items-center justify-center w-12 h-12 rounded-xl mb-2 bg-gradient-to-br from-primary-100 to-primary-200 shadow group-hover:from-primary-200 group-hover:to-yellow-100 transition-colors duration-200">
-                            <span class="text-2xl font-bold text-primary-600">
-                                <i class="fa fa-lemon"></i>
-                            </span>
-                        </div>
-                        <div class="text-sm font-medium text-gray-700 group-hover:text-primary-700 duration-150 text-center">
-                            @cat.CategoryName
-                        </div>
-                        <span class="absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded-full border border-primary-100 bg-white text-primary-500 group-hover:bg-primary-100 group-hover:text-primary-700 shadow-sm">
-                            Khám phá
-                        </span>
-                    </button>
-                </div>
-            }
-        }
-    </div>
-</section>
-
-<!-- Best Sellers Section -->
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <BestSellers />
-</section>
 
 <!-- Main Content with Sidebar -->
 <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <div class="flex flex-col lg:flex-row gap-8">
         <!-- Sidebar -->
-        <Sidebar Categories="@Categories" 
+        <Sidebar Categories="@Categories"
                  Filter="@Filter"
                  OnFilterChanged="@OnFilterChanged" />
 
@@ -172,26 +138,17 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-3">
-                    <select
-                        class="bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20">
-                        <option>Mới nhất</option>
-                        <option>Giá: Thấp đến cao</option>
-                        <option>Giá: Cao đến thấp</option>
-                        <option>Bán chạy</option>
-                    </select>
-                    <div class="hidden sm:flex items-center bg-gray-100 rounded-xl p-1">
-                        <button class="p-2 rounded-lg bg-white text-primary-600 shadow-sm">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                            </svg>
-                        </button>
-                        <button class="p-2 rounded-lg text-gray-400 hover:text-gray-600">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                            </svg>
-                        </button>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-sm text-gray-500">Hiển thị</span>
+                        <select
+                            class="bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                            value="@Filter.PageSize"
+                            @onchange="OnPageSizeChanged">
+                            <option value="6">6 / trang</option>
+                            <option value="9">9 / trang</option>
+                            <option value="12">12 / trang</option>
+                            <option value="18">18 / trang</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -211,6 +168,7 @@
             }
 
             <!-- Loading State: Products == null means loading -->
+
             @if (Products == null)
             {
                 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -241,9 +199,9 @@
             {
                 <!-- Products Grid -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                    @foreach (var (product, index) in Products.Select((p, i) => (p, i)))
+                    @foreach (var product in Products)
                     {
-                        <ProductCard Product="@product" AnimationDelay="@GetAnimationDelay(index)" />
+                        <ProductCard Product="@product" AnimationDelay="@GetAnimationDelay(1)" />
                     }
                 </div>
             }
@@ -268,14 +226,6 @@
                         </button>
                     }
 
-                    @if (Filter.TotalPages > 5)
-                    {
-                        <span class="text-gray-400 px-2">...</span>
-                        <button @onclick="async () => await GoToPageAsync(Filter.TotalPages)"
-                            class="@GetPageButtonClass(Filter.TotalPages)">
-                            @Filter.TotalPages
-                        </button>
-                    }
 
                     <button @onclick="NextPageAsync" disabled="@(Filter.CurrentPage >= Filter.TotalPages)"
                         class="p-2.5 rounded-xl border border-gray-200 text-gray-400 hover:text-primary-600 hover:border-primary-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
@@ -299,7 +249,7 @@
     private static string FormatPrice(decimal price) => $"{price:N0}đ";
 
     // Get page numbers for pagination
-    private IEnumerable<int> GetPageNumbers() => Enumerable.Range(1, Math.Min(Filter.TotalPages, 5));
+    private IEnumerable<int> GetPageNumbers() => Enumerable.Range(1, Math.Min(Filter.TotalPages, 8));
 
     // Get CSS class for page button
     private string GetPageButtonClass(int page) => Filter.CurrentPage == page

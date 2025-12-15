@@ -39,7 +39,7 @@
                     </span>
                 }
             </h3>
-            <div class="space-y-1 max-h-48 overflow-y-auto">
+            <div class="space-y-1 max-h-64 overflow-y-auto">
                 @if (Categories == null)
                 {
                     @for (int i = 0; i < 4; i++)
@@ -61,7 +61,6 @@
                                 @onchange="() => ToggleCategory(catId)"
                                 class="w-4 h-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500" />
                             <span class="ml-3 text-sm @(IsCategorySelected(catId) ? "text-primary-700 font-medium" : "text-gray-600") group-hover:text-primary-700 transition-colors flex items-center">
-                                <span class="mr-2"><i class="fa fa-lemon"></i></span>
                                 @category.CategoryName
                             </span>
                         </label>
@@ -108,17 +107,6 @@
             </div>
         </div>
 
-        <!-- Promotions -->
-        <div class="bg-gradient-to-br from-warm-400 to-warm-500 rounded-2xl p-5 text-white animate-fade-in"
-            style="animation-delay: 0.3s;">
-            <div class="text-2xl mb-2">🎁</div>
-            <h3 class="text-lg font-bold mb-2">Ưu đãi hôm nay</h3>
-            <p class="text-sm text-white/90 mb-3">Giảm đến 30% cho rau củ tươi!</p>
-            <button
-                class="w-full py-2 rounded-xl bg-white text-warm-600 font-bold text-sm hover:bg-gray-100 transition-colors">
-                Xem ngay
-            </button>
-        </div>
 
         <!-- Filter Buttons -->
         <div class="space-y-2">
