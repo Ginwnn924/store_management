@@ -39,7 +39,7 @@ public class AuthService : IAuthService
         string cacheKey = "jwt:" + token;
         await _redisCacheService.SetCacheAsync(cacheKey, "active", TimeSpan.FromDays(2));
 
-        return new LoginResponse { Token = token, Username = user.Username, Role = user.Role };
+        return new LoginResponse { UserId= user.UserId , Token = token, Username = user.Username, Role = user.Role };
     }
 
     //login for cusomter 
