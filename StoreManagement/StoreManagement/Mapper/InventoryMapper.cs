@@ -25,7 +25,10 @@ namespace StoreManagement.Mapper
                 ProductId = entity.ProductId,
                 ProductName =entity.Product?.ProductName ?? "",
                 Quantity = entity.Quantity,
-                UpdatedAt = entity.UpdatedAt
+                UpdatedAt = entity.UpdatedAt,
+                SupplierId = entity.Product?.SupplierId ?? 0,
+                //SupplierName = entity.Product?.Supplier?.Name ?? ""
+
             };
         }
     }

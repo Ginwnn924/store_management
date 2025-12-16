@@ -12,9 +12,12 @@ namespace StoreManagement.Services.Impl
     {
         private readonly IInventoryRepository _repository;
 
-        public InventoryService(IInventoryRepository repository)
+        private readonly IProductRepository _productRepository;
+
+        public InventoryService(IInventoryRepository repository, IProductRepository productRepository)
         {
             _repository = repository;
+            _productRepository = productRepository;
         }
         public async Task<PagedResponse<InventoryResponse>> GetAllInventoryAsync(InventoryFilterRequest filter)
         {
@@ -50,6 +53,17 @@ namespace StoreManagement.Services.Impl
             return inventory.ToResponse();
         }
 
+        private async Task UpdateProductSupplier(int productId, int supplierId)
+        {
+            var product = await _productRepository.GetByIdAsync(productId);
+            if (product.SupplierId != supplierId)
+            {
+                product.SupplierId = supplierId;
+                Console.WriteLine(supplierId);
+                await _productRepository.UpdateAsync(product);
+            }
+        }
+
         public async Task<InventoryResponse> AddAsync(InventoryRequest request)
         {
             var allInventory = await _repository.GetAllAsync();
@@ -59,8 +73,11 @@ namespace StoreManagement.Services.Impl
                 existing.Quantity += request.Quantity;
                 existing.UpdatedAt = DateTime.UtcNow;
                 var updated = await _repository.UpdateAsync(existing);
+                await UpdateProductSupplier(request.ProductId, request.SupplierId);
                 return updated.ToResponse();
             }
+            await UpdateProductSupplier(request.ProductId, request.SupplierId);
+
             var entity = request.ToEntity();
             var created = await _repository.AddAsync(entity);
             return created.ToResponse();
