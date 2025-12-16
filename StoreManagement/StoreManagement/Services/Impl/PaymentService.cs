@@ -15,12 +15,14 @@ namespace StoreManagement.Services.Impl
     {
         private readonly IOrderRepository _orderRepository;
         private readonly IPaymentRepository _paymentRepository;
+        private readonly IInventoryRepository _inventoryRepository;
         private readonly PaymentMapper _paymentMapper = new PaymentMapper();
 
-        public PaymentService(IPaymentRepository paymentRepository, IOrderRepository orderRepository)
+        public PaymentService(IPaymentRepository paymentRepository, IOrderRepository orderRepository, IInventoryRepository inventoryRepository)
         {
             _paymentRepository = paymentRepository;
             _orderRepository = orderRepository;
+            _inventoryRepository = inventoryRepository;
         }
 
         public async Task<IEnumerable<PaymentResponse>> GetAllPaymentsAsync()
@@ -62,6 +64,9 @@ namespace StoreManagement.Services.Impl
             var newStatus = Enum.OrderStatus.paid.ToString();
             await _orderRepository.UpdateStatusAsync(payment.OrderId, newStatus);
 
+            // Update inventory quantities based on order items (extracted method)
+            await UpdateInventoryByOrderAsync(payment.OrderId);
+
             // Create payment
             var createdPayment = await _paymentRepository.AddAsync(payment);
             var response = await _paymentRepository.GetByIdAsync(createdPayment.PaymentId);
@@ -97,7 +102,38 @@ namespace StoreManagement.Services.Impl
                 PaymentMethod = paymentMethod
             };
 
+            // AddAsync already handles inventory reduction and status update
             return await AddAsync(payment);
+        }
+        public async Task UpdateInventoryByOrderAsync(int orderId)
+        {
+            var order = await _orderRepository.GetQueryable()
+                .FirstOrDefaultAsync(o => o.OrderId == orderId);
+
+            if (order == null || order.OrderItems == null || !order.OrderItems.Any())
+                return;
+
+            foreach (var item in order.OrderItems.Where(i => !i.IsDeleted))
+            {
+                try
+                {
+                    var inventory = await _inventoryRepository.GetQueryable()
+                        .FirstOrDefaultAsync(i => i.ProductId == item.ProductId);
+
+                    if (inventory == null)
+                        continue;
+
+                    var newQuantity = inventory.Quantity - item.Quantity;
+                    inventory.Quantity = newQuantity < 0 ? 0 : newQuantity;
+                    inventory.UpdatedAt = DateTime.UtcNow;
+
+                    await _inventoryRepository.UpdateAsync(inventory);
+                }
+                catch
+                {
+             
+                }
+            }
         }
     }
 }

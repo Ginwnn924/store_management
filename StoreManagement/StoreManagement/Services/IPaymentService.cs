@@ -13,6 +13,7 @@ namespace StoreManagement.Services
         Task<PaymentResponse> GetPaymentByIdAsync(int id);
         Task<PaymentResponse> AddAsync(Payment payment);
         Task<PaymentResponse> ProcessVnpayCallbackAsync(PaymentResult paymentResult, string? vnpAmountStr);
+        Task UpdateInventoryByOrderAsync(int orderId);
     }
 }
 
