@@ -23,13 +23,15 @@ namespace StoreManagement.Services.Impl
         private readonly IConfiguration _configuration;
         private readonly OrderMapper _orderMapper = new OrderMapper();
         private readonly IPromotionRepository _promoRepository;
-        public OrderService(IOrderRepository orderRepository, IPaymentRepository paymentRepository, IVnpay vnPayservice, IConfiguration configuration, IPromotionRepository promoRepository)
+        private readonly IPaymentService _paymentService;
+        public OrderService(IOrderRepository orderRepository, IPaymentRepository paymentRepository, IPaymentService paymentService, IVnpay vnPayservice, IConfiguration configuration, IPromotionRepository promoRepository)
         {
             _orderRepository = orderRepository;
             _paymentRepository = paymentRepository;
             _promoRepository = promoRepository;
             _vnpay = vnPayservice;
             _configuration = configuration;
+            _paymentService = paymentService;
 
 
             var tmnCode = _configuration["Vnpay:TmnCode"] ?? throw new ArgumentNullException("Vnpay:TmnCode");
@@ -108,36 +110,46 @@ namespace StoreManagement.Services.Impl
 
         public async Task<OrderResponse> CreateOrderReturnOrder(OrderRequest request)
         {
-            Order createdOrder = null;
+            var newOrder = _orderMapper.ToModel(request);
             if (request.PaymentMethod == Enum.PaymentMethod.cash)
             {
-                request.OrderStatus = Enum.OrderStatus.paid;
-                Order newOrder = _orderMapper.ToModel(request);
                 newOrder.Status = Enum.OrderStatus.paid.ToString();
-                createdOrder = await _orderRepository.AddAsync(newOrder);
             }
-            
-           
+            else
+            {
+                newOrder.Status = Enum.OrderStatus.pending.ToString();
+            }
+
+            var createdOrder = await _orderRepository.AddAsync(newOrder);
+
             if (createdOrder == null)
-            {
                 throw new Exception("Order creation failed");
-            }
-            Payment payment = new Payment()
+
+            if (request.PaymentMethod == Enum.PaymentMethod.cash)
             {
-                OrderId = createdOrder.OrderId,
-                Amount = createdOrder.TotalAmount - createdOrder.DiscountAmount,
-                PaymentDate = DateTime.Now,
-                PaymentMethod = PaymentMethod.cash.ToString(),
-            };
-            await _paymentRepository.AddAsync(payment);
-            await _promoRepository.UpdateUsedCountAsync(request.promotionId);
+                var payment = new Payment()
+                {
+                    OrderId = createdOrder.OrderId,
+                    Amount = createdOrder.TotalAmount - createdOrder.DiscountAmount,
+                    PaymentDate = DateTime.Now,
+                    PaymentMethod = PaymentMethod.cash.ToString(),
+                };
+                await _paymentRepository.AddAsync(payment);
+
+                if (request.promotionId.HasValue)
+                {
+                    await _promoRepository.UpdateUsedCountAsync(request.promotionId);
+                }
+                await _paymentService.UpdateInventoryByOrderAsync(createdOrder.OrderId);
+            }
+
             var orderWithProduct = await _orderRepository.GetQueryable()
                 .FirstOrDefaultAsync(o => o.OrderId == createdOrder.OrderId);
 
             if (orderWithProduct == null)
                 throw new Exception("Order not found after creation");
 
-            OrderResponse createdOrderResponse = _orderMapper.ToDto(orderWithProduct);
+            var createdOrderResponse = _orderMapper.ToDto(orderWithProduct);
             return createdOrderResponse;
         }
 
